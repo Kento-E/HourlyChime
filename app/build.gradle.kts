@@ -1,7 +1,14 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.appdistribution)
+}
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").inputStream().use { load(it) }
 }
 
 android {
@@ -22,13 +29,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(localProps["RELEASE_STORE_FILE"] as String)
+            storePassword = localProps["RELEASE_STORE_PASSWORD"] as String
+            keyAlias = localProps["RELEASE_KEY_ALIAS"] as String
+            keyPassword = localProps["RELEASE_KEY_PASSWORD"] as String
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            firebaseAppDistribution {
+                artifactType = "APK"
+                testers = "esashika.kento@icloud.com"
+                releaseNotes = "FCM token viewer build"
+            }
         }
     }
     compileOptions {

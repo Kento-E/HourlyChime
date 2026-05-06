@@ -21,9 +21,21 @@ KEYSTORE_DIR="$PROJECT_DIR/app/keystore"
 KEYSTORE_FILE="$KEYSTORE_DIR/release.jks"
 KEY_ALIAS="mcptokenviewer"
 LOCAL_PROPS="$PROJECT_DIR/local.properties"
+DEFAULT_JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 echo "=== FCM Token Viewer セットアップ ==="
 echo "プロジェクト: $PROJECT_DIR"
+
+# ---- 0. JVM 実行設定（ネットワーク安定化） ----
+if [ -d "$DEFAULT_JAVA_HOME" ] && [ -z "${JAVA_HOME:-}" ]; then
+    export JAVA_HOME="$DEFAULT_JAVA_HOME"
+fi
+export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:--Djava.net.preferIPv4Stack=true -Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3}"
+
+if [ -n "${JAVA_HOME:-}" ]; then
+    echo "[OK] JAVA_HOME=$JAVA_HOME"
+fi
+echo "[OK] JAVA_TOOL_OPTIONS=$JAVA_TOOL_OPTIONS"
 
 # ---- 1. Firebase CLI の確認 ----
 if ! command -v firebase &>/dev/null; then
@@ -82,6 +94,29 @@ else
 fi
 
 # ---- 5. ビルド ----
+# ---- 5a. Android SDK ライセンスと必要パッケージ確認 ----
+SDK_DIR=""
+if [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+    SDK_DIR="$ANDROID_SDK_ROOT"
+elif [ -n "${ANDROID_HOME:-}" ]; then
+    SDK_DIR="$ANDROID_HOME"
+elif [ -f "$LOCAL_PROPS" ]; then
+    SDK_DIR="$(grep '^sdk.dir=' "$LOCAL_PROPS" | head -1 | cut -d'=' -f2- | sed 's#\\:#:#g')"
+fi
+
+if [ -n "$SDK_DIR" ] && [ -x "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" ]; then
+    echo "[INFO] SDK ライセンスを確認します..."
+    yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+    echo "[INFO] 必要 SDK パッケージを確認します..."
+    "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --install \
+        "platform-tools" \
+        "platforms;android-36" \
+        "build-tools;36.0.0" >/dev/null || true
+else
+    echo "[WARN] sdkmanager が見つからないため SDK 準備をスキップします（Android Studio 側で不足分を導入してください）。"
+fi
+
+# ---- 5b. ビルド ----
 echo "[INFO] リリース APK をビルドします..."
 cd "$PROJECT_DIR"
 ./gradlew assembleRelease

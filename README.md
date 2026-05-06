@@ -28,7 +28,7 @@ Firebase コンソール（<https://console.firebase.google.com>）で以下の�
 `google-services.json` をダウンロードして `app/` ディレクトリに配置します。
 
 1. 「プロジェクトを追加」で Firebase プロジェクトを作成する
-2. 「アプリを追加」→ Android を選び、パッケージ名 `com.example.mcptokenviewer` を登録する
+2. 「アプリを追加」→ Android を選び、パッケージ名 `com.example.fcm_token_viewer` を登録する
 3. `google-services.json` をダウンロードして `app/` に配置する
 4. Firebase コンソールの「プロジェクトの設定」で **Firebase Cloud Messaging API** が有効になっていることを確認する
 
@@ -74,11 +74,13 @@ bash scripts/setup_fcm_token_app.sh
 
 #### 実行内容
 
-1. Firebase CLI のインストール確認・ログイン確認
-2. 署名キーストアの生成（初回のみ）
-3. `local.properties` への署名情報書き込み
-4. リリース APK のビルド
-5. Firebase App Distribution へのアップロード
+1. JBR（Android Studio 同梱 JDK）と TLS/IPv4 系の JVM オプションを設定
+2. Firebase CLI のインストール確認・ログイン確認
+3. 署名キーストアの生成（初回のみ）
+4. `local.properties` への署名情報書き込み
+5. `sdkmanager` が利用可能な場合は SDK ライセンス確認と必要パッケージ導入
+6. リリース APK のビルド
+7. Firebase App Distribution へのアップロード
 
 ### USB デバッグで直接インストール（最速）
 
@@ -90,6 +92,14 @@ bash scripts/setup_fcm_token_app.sh
 
 ```bash
 # リリース APK をビルドしてアップロード
+./gradlew assembleRelease appDistributionUploadRelease
+```
+
+ネットワーク環境によっては TLS 周りの問題を避けるため、次の実行例を使うと安定します。
+
+```bash
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true -Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3" \
 ./gradlew assembleRelease appDistributionUploadRelease
 ```
 
@@ -145,3 +155,34 @@ MCPTokenViewer/
 - `local.properties` と `app/keystore/` は `.gitignore` により Git 管理外です
 - token はアプリ再インストールや端末移行で再生成されることがあります
 - 古い token は FCM 送信失敗の原因になるため、変更時は FCM 送信クライアント側の設定も更新してください
+
+## トラブルシュート
+
+### 1. `Plugin com.android.application was not found` が出る
+
+- `./gradlew ... | tail -20` のようなパイプ付きコマンドは、Gradle の失敗が見えにくくなることがあります。
+- まずはパイプなしで実行して正しい終了コードを確認してください。
+
+```bash
+./gradlew assembleRelease
+```
+
+### 2. `AppDistribution` プラグイン適用時に `AppExtension does not exist` が出る
+
+- Firebase App Distribution プラグインのバージョンを最新系に更新します。
+- このプロジェクトでは `gradle/libs.versions.toml` の `firebaseAppDistribution` を `5.2.1` にしています。
+
+### 3. `SDK license not accepted` / `build-tools;36.0.0` がない
+
+Android SDK Command-line Tools を最新化し、ライセンス受諾と必要パッケージ導入を行ってください。
+
+```bash
+SDK="$HOME/Library/Android/sdk"
+curl -fsL "https://dl.google.com/android/repository/commandlinetools-mac-14742923_latest.zip" -o /tmp/commandlinetools-mac-latest.zip
+rm -rf /tmp/cmdline-tools-extract "$SDK/cmdline-tools/latest"
+unzip -q /tmp/commandlinetools-mac-latest.zip -d /tmp/cmdline-tools-extract
+mv /tmp/cmdline-tools-extract/cmdline-tools "$SDK/cmdline-tools/latest"
+
+yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses
+"$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+```

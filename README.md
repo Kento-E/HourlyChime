@@ -64,6 +64,22 @@ firebase login
 
 ## ビルドと配布
 
+### セットアップスクリプト（推奨）
+
+ステップ 2〜4 と配布までを一括で行うスクリプトを用意しています。
+
+```bash
+bash scripts/setup_fcm_token_app.sh
+```
+
+#### 実行内容
+
+1. Firebase CLI のインストール確認・ログイン確認
+2. 署名キーストアの生成（初回のみ）
+3. `local.properties` への署名情報書き込み
+4. リリース APK のビルド
+5. Firebase App Distribution へのアップロード
+
 ### USB デバッグで直接インストール（最速）
 
 ```bash
@@ -118,6 +134,8 @@ MCPTokenViewer/
 │       └── MainActivity.kt           # token 取得・表示
 ├── gradle/
 │   └── libs.versions.toml            # 依存バージョン管理
+├── scripts/
+│   └── setup_fcm_token_app.sh        # ビルド〜App Distribution 配布の一括スクリプト
 ├── local.properties                  # 署名情報（Git 管理外）
 └── gradle.properties                 # JVM / Gradle 設定
 ```

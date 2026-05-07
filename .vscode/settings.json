@@ -1,6 +1,7 @@
 {
   "chat.tools.terminal.autoApprove": {
     "git rev-parse": true,
-    "git push": true
+    "git push": true,
+    "convert": true
   }
 }

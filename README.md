@@ -32,55 +32,18 @@ Firebase コンソール（<https://console.firebase.google.com>）で以下の�
 3. `google-services.json` をダウンロードして `app/` に配置する
 4. Firebase コンソールの「プロジェクトの設定」で **Firebase Cloud Messaging API** が有効になっていることを確認する
 
-### 2. リリース署名キーストアを生成する（初回のみ）
+### 2. セットアップスクリプトを実行する
 
-```bash
-mkdir -p app/keystore
-keytool -genkeypair -v \
-  -keystore app/keystore/release.jks \
-  -alias mcptokenviewer \
-  -keyalg RSA -keysize 2048 -validity 9125 \
-  -storepass <パスワード> \
-  -keypass <パスワード> \
-  -dname "CN=MCPTokenViewer, OU=Dev, O=Personal, L=Tokyo, ST=Tokyo, C=JP"
-```
-
-### 3. local.properties に署名情報を追記する
-
-`local.properties`（Git 管理外）に以下を追加します。
-
-```properties
-RELEASE_STORE_FILE=keystore/release.jks
-RELEASE_STORE_PASSWORD=<パスワード>
-RELEASE_KEY_ALIAS=mcptokenviewer
-RELEASE_KEY_PASSWORD=<パスワード>
-```
-
-### 4. Firebase CLI でログインする
-
-```bash
-firebase login
-```
-
-## ビルドと配布
-
-### セットアップスクリプト（推奨）
-
-ステップ 2〜4 と配布までを一括で行うスクリプトを用意しています。
+署名キーストアの生成・`local.properties` への署名情報書き込み・Firebase CLI ログイン確認から  
+App Distribution への配布まで、以下のスクリプトで一括実行できます。
 
 ```bash
 bash scripts/setup_fcm_token_app.sh
 ```
 
-#### 実行内容
+各ステップの詳細は [scripts/README.md](scripts/README.md) を参照してください。
 
-1. JBR（Android Studio 同梱 JDK）と TLS/IPv4 系の JVM オプションを設定
-2. Firebase CLI のインストール確認・ログイン確認
-3. 署名キーストアの生成（初回のみ）
-4. `local.properties` への署名情報書き込み
-5. `sdkmanager` が利用可能な場合は SDK ライセンス確認と必要パッケージ導入
-6. リリース APK のビルド
-7. Firebase App Distribution へのアップロード
+手動で進める場合も同ファイルに手順をまとめています。
 
 ### USB デバッグで直接インストール（最速）
 

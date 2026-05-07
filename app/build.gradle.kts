@@ -12,7 +12,7 @@ val localProps = Properties().apply {
 }
 
 android {
-    namespace = "com.example.mcptokenviewer"
+    namespace = "com.example.hourlychime"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.fcm_token_viewer"
+        applicationId = "com.example.hourlychime"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

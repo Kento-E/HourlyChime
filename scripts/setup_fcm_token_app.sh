@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # setup_fcm_token_app.sh
 #
-# MCPTokenViewer Android アプリのビルド環境をセットアップし、
+# HourlyChime Android アプリのビルド環境をセットアップし、
 # Firebase App Distribution へリリース APK をアップロードするスクリプト。
 #
 # 前提条件:
@@ -11,7 +11,7 @@
 #   - app/google-services.json が配置済みであること
 #
 # 使用方法:
-#   cd /path/to/MCPTokenViewer
+#   cd /path/to/HourlyChime
 #   bash scripts/setup_fcm_token_app.sh
 
 set -euo pipefail
@@ -19,7 +19,7 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 KEYSTORE_DIR="$PROJECT_DIR/app/keystore"
 KEYSTORE_FILE="$KEYSTORE_DIR/release.jks"
-KEY_ALIAS="mcptokenviewer"
+KEY_ALIAS="hourlychime"
 LOCAL_PROPS="$PROJECT_DIR/local.properties"
 DEFAULT_JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
@@ -65,7 +65,7 @@ if [ ! -f "$KEYSTORE_FILE" ]; then
         -keyalg RSA -keysize 2048 -validity 9125 \
         -storepass "$STORE_PASS" \
         -keypass "$KEY_PASS" \
-        -dname "CN=MCPTokenViewer, OU=Dev, O=Personal, L=Tokyo, ST=Tokyo, C=JP"
+        -dname "CN=HourlyChime, OU=Dev, O=Personal, L=Tokyo, ST=Tokyo, C=JP"
 
     echo "[OK] キーストア生成完了: $KEYSTORE_FILE"
 else

@@ -1,4 +1,4 @@
-package com.example.mcptokenviewer.ui.theme
+package com.example.hourlychime.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

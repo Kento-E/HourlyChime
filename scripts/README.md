@@ -4,7 +4,7 @@
 下記の手順を一括で行うスクリプトです。
 
 ```bash
-cd /path/to/MCPTokenViewer
+cd /path/to/HourlyChime
 bash scripts/setup_fcm_token_app.sh
 ```
 
@@ -29,11 +29,11 @@ bash scripts/setup_fcm_token_app.sh
 mkdir -p app/keystore
 keytool -genkeypair -v \
   -keystore app/keystore/release.jks \
-  -alias mcptokenviewer \
+  -alias hourlychime \
   -keyalg RSA -keysize 2048 -validity 9125 \
   -storepass <パスワード> \
   -keypass <パスワード> \
-  -dname "CN=MCPTokenViewer, OU=Dev, O=Personal, L=Tokyo, ST=Tokyo, C=JP"
+  -dname "CN=HourlyChime, OU=Dev, O=Personal, L=Tokyo, ST=Tokyo, C=JP"
 ```
 
 ### ステップ 3 — local.properties への署名情報書き込み
@@ -44,7 +44,7 @@ keytool -genkeypair -v \
 ```properties
 RELEASE_STORE_FILE=keystore/release.jks
 RELEASE_STORE_PASSWORD=<パスワード>
-RELEASE_KEY_ALIAS=mcptokenviewer
+RELEASE_KEY_ALIAS=hourlychime
 RELEASE_KEY_PASSWORD=<パスワード>
 ```
 

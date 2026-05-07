@@ -1,10 +1,14 @@
-# MCPTokenViewer
+# HourlyChime
 
-Firebase Cloud Messaging (FCM) の registration token を Android 実機で取得するための最小構成アプリです。
+曜日・時刻・祝日スキップ設定で毎正時に通知する時報 Android アプリです。
+FCM registration token の取得・表示機能も搭載しています（開発者向けサブ機能）。
 
 ## 動作概要
 
-アプリを起動すると FCM registration token を取得し、画面中央に表示します。
+アプリを起動すると「時報設定」タブで時報の ON/OFF・曜日・時刻範囲・祝日スキップを設定できます。
+設定を保存すると次の正時にシステム通知として時報が届きます。
+
+「FCM Token」タブでは FCM registration token を取得・表示できます。
 token は長押しでコピーできます。Logcat でも確認できます。
 
 ```
@@ -28,7 +32,7 @@ Firebase コンソール（<https://console.firebase.google.com>）で以下の�
 `google-services.json` をダウンロードして `app/` ディレクトリに配置します。
 
 1. 「プロジェクトを追加」で Firebase プロジェクトを作成する
-2. 「アプリを追加」→ Android を選び、パッケージ名 `com.example.fcm_token_viewer` を登録する
+2. 「アプリを追加」→ Android を選び、パッケージ名 `com.example.hourlychime` を登録する
 3. `google-services.json` をダウンロードして `app/` に配置する
 4. Firebase コンソールの「プロジェクトの設定」で **Firebase Cloud Messaging API** が有効になっていることを確認する
 
@@ -97,18 +101,26 @@ adb logcat | grep registration_token=
 ## プロジェクト構成
 
 ```
-MCPTokenViewer/
+HourlyChime/
 ├── app/
 │   ├── google-services.json          # Firebase 設定（要配置）
 │   ├── keystore/
 │   │   └── release.jks               # 署名キー（Git 管理外）
 │   ├── build.gradle.kts              # Firebase / App Distribution 設定
-│   └── src/main/java/.../
-│       └── MainActivity.kt           # token 取得・表示
+│   └── src/main/java/com/example/hourlychime/
+│       ├── MainActivity.kt           # タブUI・FCM token取得
+│       ├── TimeSignalScreen.kt       # 時報設定UI
+│       ├── TimeSignalScheduler.kt    # AlarmManager スケジューリング
+│       ├── TimeSignalReceiver.kt     # アラーム受信・通知発行
+│       ├── TimeSignalSettings.kt     # 設定データ・SharedPreferences
+│       ├── HolidayRepository.kt      # 祝日データ取得・キャッシュ
+│       ├── NotificationHelper.kt     # 通知チャンネル・通知発行
+│       └── BootReceiver.kt           # 端末再起動後の復元
 ├── gradle/
 │   └── libs.versions.toml            # 依存バージョン管理
 ├── scripts/
-│   └── setup_fcm_token_app.sh        # ビルド〜App Distribution 配布の一括スクリプト
+│   ├── setup_fcm_token_app.sh        # ビルド〜App Distribution 配布の一括スクリプト
+│   └── README.md                     # スクリプト詳細
 ├── local.properties                  # 署名情報（Git 管理外）
 └── gradle.properties                 # JVM / Gradle 設定
 ```

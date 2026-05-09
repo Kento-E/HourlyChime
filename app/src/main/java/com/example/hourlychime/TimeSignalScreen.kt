@@ -1,6 +1,8 @@
 package com.example.hourlychime
 
 import android.app.AlarmManager
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
@@ -13,8 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,7 +47,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
+fun TimeSignalScreen(
+    onRequestExactAlarmPermission: () -> Unit,
+    onRequestBluetoothPermission: () -> Unit,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -51,6 +59,10 @@ fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
     var hasExactAlarmPermission by remember {
         mutableStateOf(canScheduleExactAlarms(context))
     }
+    var hasBluetoothPermission by remember {
+        mutableStateOf(BluetoothHelper.hasBluetoothConnectPermission(context))
+    }
+    var bondedDevices by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
 
     // 起動時に祝日キャッシュを更新し、次回時報テキストを計算する
     LaunchedEffect(Unit) {
@@ -58,6 +70,8 @@ fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
             withContext(Dispatchers.IO) { HolidayRepository.refreshSync(context) }
         }
         nextChimeText = calcNextChimeText(context, settings)
+        hasBluetoothPermission = BluetoothHelper.hasBluetoothConnectPermission(context)
+        bondedDevices = BluetoothHelper.getBondedDevices(context)
     }
 
     val saveAndReschedule: (TimeSignalSettings) -> Unit = { s ->
@@ -169,7 +183,7 @@ fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
                 Slider(
                     value = settings.startHour.toFloat(),
                     onValueChange = { v ->
-                        val h = v.toInt().coerceAtMost(settings.endHour)
+                        val h = v.roundToInt().coerceAtMost(settings.endHour)
                         saveAndReschedule(settings.copy(startHour = h))
                     },
                     valueRange = 0f..23f,
@@ -184,7 +198,7 @@ fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
                 Slider(
                     value = settings.endHour.toFloat(),
                     onValueChange = { v ->
-                        val h = v.toInt().coerceAtLeast(settings.startHour)
+                        val h = v.roundToInt().coerceAtLeast(settings.startHour)
                         saveAndReschedule(settings.copy(endHour = h))
                     },
                     valueRange = 0f..23f,
@@ -214,6 +228,130 @@ fun TimeSignalScreen(onRequestExactAlarmPermission: () -> Unit) {
                     checked = settings.skipHolidays,
                     onCheckedChange = { saveAndReschedule(settings.copy(skipHolidays = it)) },
                 )
+            }
+        }
+
+        // Bluetooth フィルター設定
+        BluetoothFilterCard(
+            settings = settings,
+            hasBluetoothPermission = hasBluetoothPermission,
+            bondedDevices = bondedDevices,
+            onRequestBluetoothPermission = {
+                onRequestBluetoothPermission()
+                hasBluetoothPermission = BluetoothHelper.hasBluetoothConnectPermission(context)
+                bondedDevices = BluetoothHelper.getBondedDevices(context)
+            },
+            onSettingsChanged = saveAndReschedule,
+        )
+    }
+}
+
+@SuppressLint("MissingPermission")
+@Composable
+private fun BluetoothFilterCard(
+    settings: TimeSignalSettings,
+    hasBluetoothPermission: Boolean,
+    bondedDevices: List<BluetoothDevice>,
+    onRequestBluetoothPermission: () -> Unit,
+    onSettingsChanged: (TimeSignalSettings) -> Unit,
+) {
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "特定のBluetooth端末と接続時のみ",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "選択した端末が接続中のときのみ時報を鳴らす",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = settings.bluetoothFilterEnabled,
+                    onCheckedChange = {
+                        onSettingsChanged(settings.copy(bluetoothFilterEnabled = it))
+                    },
+                )
+            }
+
+            if (settings.bluetoothFilterEnabled) {
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+
+                if (!hasBluetoothPermission) {
+                    // 権限なしバナー
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Bluetooth権限が必要です",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = onRequestBluetoothPermission) {
+                            Text("許可する")
+                        }
+                    }
+                } else if (bondedDevices.isEmpty()) {
+                    Text(
+                        text = "ペアリング済みのBluetoothデバイスがありません",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Text(
+                        text = "対象デバイスを選択",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    bondedDevices.forEach { device ->
+                        val address = device.address
+                        val name = runCatching { device.name }.getOrNull() ?: address
+                        val isSelected = address in settings.bluetoothTargetDevices
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = isSelected,
+                                onCheckedChange = { checked ->
+                                    val newDevices = if (checked) {
+                                        settings.bluetoothTargetDevices + address
+                                    } else {
+                                        settings.bluetoothTargetDevices - address
+                                    }
+                                    onSettingsChanged(
+                                        settings.copy(bluetoothTargetDevices = newDevices),
+                                    )
+                                },
+                            )
+                            Column {
+                                Text(name, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    address,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

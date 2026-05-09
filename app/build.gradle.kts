@@ -4,11 +4,19 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.appdistribution)
 }
 
 val localProps = Properties().apply {
     rootProject.file("local.properties").inputStream().use { load(it) }
+}
+
+val firebaseAppId = "1:1052281628451:android:3d20d418e11e45e48f0e96"
+val firebaseTesters = "esashika.kento@icloud.com"
+val firebaseReleaseNotes = "FCM token viewer build"
+val firebaseCommand = if (System.getProperty("os.name").startsWith("Windows")) {
+    "firebase.cmd"
+} else {
+    "firebase"
 }
 
 android {
@@ -46,11 +54,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            firebaseAppDistribution {
-                artifactType = "APK"
-                testers = "esashika.kento@icloud.com"
-                releaseNotes = "FCM token viewer build"
-            }
         }
     }
     compileOptions {
@@ -80,4 +83,29 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register<Exec>("appDistributionUploadRelease") {
+    group = "distribution"
+    description = "Upload the release APK to Firebase App Distribution via Firebase CLI."
+    dependsOn("assembleRelease")
+
+    doFirst {
+        val apkFile = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
+        if (!apkFile.exists()) {
+            throw GradleException("Release APK not found: ${apkFile.absolutePath}")
+        }
+
+        commandLine(
+            firebaseCommand,
+            "appdistribution:distribute",
+            apkFile.absolutePath,
+            "--app",
+            firebaseAppId,
+            "--testers",
+            firebaseTesters,
+            "--release-notes",
+            firebaseReleaseNotes,
+        )
+    }
 }

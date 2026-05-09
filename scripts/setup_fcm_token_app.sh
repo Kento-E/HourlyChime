@@ -23,6 +23,13 @@ KEY_ALIAS="hourlychime"
 LOCAL_PROPS="$PROJECT_DIR/local.properties"
 DEFAULT_JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
+read_local_prop() {
+    local key="$1"
+    if [ -f "$LOCAL_PROPS" ]; then
+        sed -n "s|^${key}=||p" "$LOCAL_PROPS" | head -n 1
+    fi
+}
+
 echo "=== FCM Token Viewer セットアップ ==="
 echo "プロジェクト: $PROJECT_DIR"
 
@@ -70,8 +77,16 @@ if [ ! -f "$KEYSTORE_FILE" ]; then
     echo "[OK] キーストア生成完了: $KEYSTORE_FILE"
 else
     echo "[OK] キーストアは既に存在します: $KEYSTORE_FILE"
-    read -rsp "キーストアのパスワードを入力してください: " STORE_PASS; echo
-    KEY_PASS="$STORE_PASS"
+    STORE_PASS="$(read_local_prop RELEASE_STORE_PASSWORD)"
+    KEY_PASS="$(read_local_prop RELEASE_KEY_PASSWORD)"
+
+    if [ -n "$STORE_PASS" ] && [ -n "$KEY_PASS" ]; then
+        echo "[OK] local.properties の既存署名情報を再利用します"
+    else
+        read -rsp "キーストアのパスワードを入力してください: " STORE_PASS; echo
+        read -rsp "キーのパスワードを入力してください (Enterで同じパスワードを使用): " KEY_PASS; echo
+        KEY_PASS="${KEY_PASS:-$STORE_PASS}"
+    fi
 fi
 
 # ---- 4. local.properties への署名情報書き込み ----
@@ -130,7 +145,14 @@ echo "[OK] APK: $APK_PATH"
 
 # ---- 6. Firebase App Distribution へアップロード ----
 echo "[INFO] Firebase App Distribution へアップロードします..."
-./gradlew appDistributionUploadRelease
+cd "$PROJECT_DIR"
+
+if ./gradlew appDistributionUploadRelease; then
+    echo "[OK] Gradle タスク経由でのアップロード成功"
+else
+    echo "[ERROR] アップロードが失敗しました。firebase login 状態とネットワークを確認してください。"
+    exit 1
+fi
 
 echo ""
 echo "=== 完了 ==="

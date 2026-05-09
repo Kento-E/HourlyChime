@@ -11,14 +11,14 @@ FCM registration token の取得・表示機能も搭載しています（開発
 「FCM Token」タブでは FCM registration token を取得・表示できます。
 token は長押しでコピーできます。Logcat でも確認できます。
 
-```
+```bash
 adb logcat | grep registration_token=
 ```
 
 ## 前提条件
 
 | ツール | バージョン |
-|--------|-----------|
+| ------ | ---------- |
 | Android Studio | 最新版 |
 | JDK | 21 |
 | Node.js | >= 20（Firebase CLI 用） |
@@ -57,9 +57,18 @@ bash scripts/setup_fcm_token_app.sh
 
 ### Firebase App Distribution でテスターへ配布
 
+ワンコマンドで Firebase App Distribution へリリース APK をビルド・配布できます:
+
 ```bash
-# リリース APK をビルドしてアップロード
-./gradlew assembleRelease appDistributionUploadRelease
+# セットアップスクリプトで一括処理（初回推奨）
+bash scripts/setup_fcm_token_app.sh
+
+# セットアップ済みなら以下のいずれかで実行可能
+./gradlew assembleRelease appDistributionUploadRelease  # Gradle プラグイン経由
+# または
+firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
+  --app 1:1052281628451:android:3d20d418e11e45e48f0e96 \
+  --testers esashika.kento@icloud.com
 ```
 
 ネットワーク環境によっては TLS 周りの問題を避けるため、次の実行例を使うと安定します。
@@ -73,15 +82,18 @@ JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true -Dhttps.protocols=TLSv1.2,TLS
 テスター（`esashika.kento@icloud.com`）に招待メールが届きます。
 アプリをインストールして token を取得してください。
 
+#### 認証情報の設定
+
+- **初回のみ**: `firebase login` で Firebase CLI にログインしてください
+- 詳細は [scripts/README.md](scripts/README.md) を参照してください
+
 テスターや release notes を変更する場合は `app/build.gradle.kts` の
-`firebaseAppDistribution` ブロックを編集してください。
+アップロードタスク定義を編集してください。
 
 ```kotlin
-firebaseAppDistribution {
-    artifactType = "APK"
-    testers = "example@example.com"
-    releaseNotes = "FCM token viewer build"
-}
+val firebaseAppId = "1:1052281628451:android:xxxxxxxxxxxxxxxx"
+val firebaseTesters = "example@example.com"
+val firebaseReleaseNotes = "Updated features"
 ```
 
 ## token の取得
@@ -100,7 +112,7 @@ adb logcat | grep registration_token=
 
 ## プロジェクト構成
 
-```
+```text
 HourlyChime/
 ├── app/
 │   ├── google-services.json          # Firebase 設定（要配置）

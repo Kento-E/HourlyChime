@@ -24,6 +24,10 @@ data class TimeSignalSettings(
     val startHour: Int = 9,
     val endHour: Int = 17,
     val skipHolidays: Boolean = true,
+    /** true のとき、以下のデバイスのいずれかが接続中のときのみ時報を鳴らす */
+    val bluetoothFilterEnabled: Boolean = false,
+    /** Bluetooth フィルター対象デバイスの MAC アドレスセット */
+    val bluetoothTargetDevices: Set<String> = emptySet(),
 )
 
 object TimeSignalPrefs {
@@ -49,6 +53,12 @@ object TimeSignalPrefs {
             startHour = p.getInt("start_hour", 9),
             endHour = p.getInt("end_hour", 17),
             skipHolidays = p.getBoolean("skip_holidays", true),
+            bluetoothFilterEnabled = p.getBoolean("bt_filter_enabled", false),
+            bluetoothTargetDevices = p.getString("bt_target_devices", null)
+                ?.split(",")
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                ?.toSet() ?: emptySet(),
         )
     }
 
@@ -59,6 +69,8 @@ object TimeSignalPrefs {
             .putInt("start_hour", settings.startHour)
             .putInt("end_hour", settings.endHour)
             .putBoolean("skip_holidays", settings.skipHolidays)
+            .putBoolean("bt_filter_enabled", settings.bluetoothFilterEnabled)
+            .putString("bt_target_devices", settings.bluetoothTargetDevices.joinToString(","))
             .apply()
     }
 }

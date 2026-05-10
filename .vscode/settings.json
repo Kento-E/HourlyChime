@@ -3,5 +3,6 @@
     "git rev-parse": true,
     "git push": true,
     "convert": true
-  }
+  },
+  "cSpell.words": ["hourlychime"]
 }

@@ -59,6 +59,19 @@
                 <action android:name="android.bluetooth.adapter.action.CONNECTION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- 外部操作用レシーバー（Galaxyルーチン / Tasker など） -->
+        <receiver
+            android:name=".ControlReceiver"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.example.hourlychime.ACTION_TOGGLE_ENABLED" />
+                <action android:name="com.example.hourlychime.ACTION_SET_TIME_RANGE" />
+                <action android:name="com.example.hourlychime.ACTION_SET_ENABLED_DAYS" />
+                <action android:name="com.example.hourlychime.ACTION_SET_BLUETOOTH_FILTER" />
+                <action android:name="com.example.hourlychime.ACTION_SET_SKIP_HOLIDAYS" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

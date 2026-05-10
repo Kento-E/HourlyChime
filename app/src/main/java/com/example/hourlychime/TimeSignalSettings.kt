@@ -13,21 +13,22 @@ import java.util.Calendar
  * @param skipHolidays trueの場合、国民の祝日には時報を鳴らさない
  */
 data class TimeSignalSettings(
-    val enabled: Boolean = false,
-    val enabledDays: Set<Int> = setOf(
-        Calendar.MONDAY,
-        Calendar.TUESDAY,
-        Calendar.WEDNESDAY,
-        Calendar.THURSDAY,
-        Calendar.FRIDAY,
-    ),
-    val startHour: Int = 9,
-    val endHour: Int = 17,
-    val skipHolidays: Boolean = true,
-    /** true のとき、以下のデバイスのいずれかが接続中のときのみ時報を鳴らす */
-    val bluetoothFilterEnabled: Boolean = false,
-    /** Bluetooth フィルター対象デバイスの MAC アドレスセット */
-    val bluetoothTargetDevices: Set<String> = emptySet(),
+        val enabled: Boolean = false,
+        val enabledDays: Set<Int> =
+                setOf(
+                        Calendar.MONDAY,
+                        Calendar.TUESDAY,
+                        Calendar.WEDNESDAY,
+                        Calendar.THURSDAY,
+                        Calendar.FRIDAY,
+                ),
+        val startHour: Int = 9,
+        val endHour: Int = 17,
+        val skipHolidays: Boolean = true,
+        /** true のとき、以下のデバイスのいずれかが接続中のときのみ時報を鳴らす */
+        val bluetoothFilterEnabled: Boolean = false,
+        /** Bluetooth フィルター対象デバイスの MAC アドレスセット */
+        val bluetoothTargetDevices: Set<String> = emptySet(),
 )
 
 object TimeSignalPrefs {
@@ -36,41 +37,45 @@ object TimeSignalPrefs {
     fun load(context: Context): TimeSignalSettings {
         val p = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val daysStr = p.getString("enabled_days", null)
-        val days = if (daysStr.isNullOrEmpty()) {
-            setOf(
-                Calendar.MONDAY,
-                Calendar.TUESDAY,
-                Calendar.WEDNESDAY,
-                Calendar.THURSDAY,
-                Calendar.FRIDAY,
-            )
-        } else {
-            daysStr.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-        }
+        val days =
+                if (daysStr.isNullOrEmpty()) {
+                    setOf(
+                            Calendar.MONDAY,
+                            Calendar.TUESDAY,
+                            Calendar.WEDNESDAY,
+                            Calendar.THURSDAY,
+                            Calendar.FRIDAY,
+                    )
+                } else {
+                    daysStr.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+                }
         return TimeSignalSettings(
-            enabled = p.getBoolean("enabled", false),
-            enabledDays = days,
-            startHour = p.getInt("start_hour", 9),
-            endHour = p.getInt("end_hour", 17),
-            skipHolidays = p.getBoolean("skip_holidays", true),
-            bluetoothFilterEnabled = p.getBoolean("bt_filter_enabled", false),
-            bluetoothTargetDevices = p.getString("bt_target_devices", null)
-                ?.split(",")
-                ?.map { it.trim() }
-                ?.filter { it.isNotEmpty() }
-                ?.toSet() ?: emptySet(),
+                enabled = p.getBoolean("enabled", false),
+                enabledDays = days,
+                startHour = p.getInt("start_hour", 9),
+                endHour = p.getInt("end_hour", 17),
+                skipHolidays = p.getBoolean("skip_holidays", true),
+                bluetoothFilterEnabled = p.getBoolean("bt_filter_enabled", false),
+                bluetoothTargetDevices =
+                        p.getString("bt_target_devices", null)
+                                ?.split(",")
+                                ?.map { it.trim() }
+                                ?.filter { it.isNotEmpty() }
+                                ?.toSet()
+                                ?: emptySet(),
         )
     }
 
     fun save(context: Context, settings: TimeSignalSettings) {
-        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("enabled", settings.enabled)
-            .putString("enabled_days", settings.enabledDays.joinToString(","))
-            .putInt("start_hour", settings.startHour)
-            .putInt("end_hour", settings.endHour)
-            .putBoolean("skip_holidays", settings.skipHolidays)
-            .putBoolean("bt_filter_enabled", settings.bluetoothFilterEnabled)
-            .putString("bt_target_devices", settings.bluetoothTargetDevices.joinToString(","))
-            .apply()
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("enabled", settings.enabled)
+                .putString("enabled_days", settings.enabledDays.joinToString(","))
+                .putInt("start_hour", settings.startHour)
+                .putInt("end_hour", settings.endHour)
+                .putBoolean("skip_holidays", settings.skipHolidays)
+                .putBoolean("bt_filter_enabled", settings.bluetoothFilterEnabled)
+                .putString("bt_target_devices", settings.bluetoothTargetDevices.joinToString(","))
+                .apply()
     }
 }

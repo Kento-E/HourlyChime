@@ -1,18 +1,18 @@
 package com.example.hourlychime
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -46,25 +46,38 @@ class MainActivity : ComponentActivity() {
 
         NotificationHelper.createChannel(this)
 
+        // 省電力化：起動時にスケジュールキャッシュを復元
+        ScheduleCache.restoreFromPrefs(this)
+
+        // 省電力化：Bluetooth初期状態をキャッシュに同期
+        if (BluetoothHelper.hasBluetoothConnectPermission(this)) {
+            val connectedAddresses =
+                    BluetoothHelper.getBondedDevices(this)
+                            .filter { BluetoothHelper.isDeviceConnectedPublic(it) }
+                            .mapTo(mutableSetOf()) { it.address }
+            BluetoothStateMonitor.updateConnectedDevices(connectedAddresses)
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 0)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             requestPermissions(
-                arrayOf(android.Manifest.permission.BLUETOOTH_CONNECT),
-                1,
+                    arrayOf(android.Manifest.permission.BLUETOOTH_CONNECT),
+                    1,
             )
         }
 
         var token by mutableStateOf("取得中...")
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            token = if (task.isSuccessful) {
-                Log.i("FCM", "registration_token=${task.result}")
-                task.result
-            } else {
-                Log.e("FCM", "token取得失敗", task.exception)
-                "取得失敗: ${task.exception?.message}"
-            }
+            token =
+                    if (task.isSuccessful) {
+                        Log.i("FCM", "registration_token=${task.result}")
+                        task.result
+                    } else {
+                        Log.e("FCM", "token取得失敗", task.exception)
+                        "取得失敗: ${task.exception?.message}"
+                    }
         }
 
         setContent {
@@ -77,17 +90,22 @@ class MainActivity : ComponentActivity() {
                         TabRow(selectedTabIndex = selectedTab) {
                             tabs.forEachIndexed { index, title ->
                                 Tab(
-                                    selected = selectedTab == index,
-                                    onClick = { selectedTab = index },
-                                    text = { Text(title) },
+                                        selected = selectedTab == index,
+                                        onClick = { selectedTab = index },
+                                        text = { Text(title) },
                                 )
                             }
                         }
                         when (selectedTab) {
-                            0 -> TimeSignalScreen(
-                                onRequestExactAlarmPermission = { openExactAlarmSettings() },
-                                onRequestBluetoothPermission = { openBluetoothPermissionSettings() },
-                            )
+                            0 ->
+                                    TimeSignalScreen(
+                                            onRequestExactAlarmPermission = {
+                                                openExactAlarmSettings()
+                                            },
+                                            onRequestBluetoothPermission = {
+                                                openBluetoothPermissionSettings()
+                                            },
+                                    )
                             1 -> TokenScreen(token = token)
                         }
                     }
@@ -99,16 +117,16 @@ class MainActivity : ComponentActivity() {
     private fun openExactAlarmSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             startActivity(
-                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                    .setData(Uri.parse("package:$packageName")),
+                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                            .setData(Uri.parse("package:$packageName")),
             )
         }
     }
 
     private fun openBluetoothPermissionSettings() {
         startActivity(
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                .setData(Uri.parse("package:$packageName")),
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        .setData(Uri.parse("package:$packageName")),
         )
     }
 }
@@ -117,30 +135,29 @@ class MainActivity : ComponentActivity() {
 fun TokenScreen(token: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = modifier.fillMaxSize().padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "FCM Registration Token",
-            style = MaterialTheme.typography.titleLarge,
+                text = "FCM Registration Token",
+                style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(16.dp))
         SelectionContainer {
             Text(
-                text = token,
-                style = MaterialTheme.typography.bodySmall,
+                    text = token,
+                    style = MaterialTheme.typography.bodySmall,
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("FCM Token", token))
-            Toast.makeText(context, "クリップボードにコピーしました", Toast.LENGTH_SHORT).show()
-        }) {
-            Text("クリップボードにコピー")
-        }
+        Button(
+                onClick = {
+                    val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("FCM Token", token))
+                    Toast.makeText(context, "クリップボードにコピーしました", Toast.LENGTH_SHORT).show()
+                }
+        ) { Text("クリップボードにコピー") }
     }
 }

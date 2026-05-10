@@ -24,26 +24,28 @@ class TimeSignalReceiver : BroadcastReceiver() {
                 val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
                 val isHoliday = settings.skipHolidays && HolidayRepository.isHoliday(context, now)
 
-                val isBluetoothOk = if (settings.bluetoothFilterEnabled) {
-                    BluetoothHelper.isAnyTargetDeviceConnected(
-                        context,
-                        settings.bluetoothTargetDevices,
-                    )
-                } else {
-                    true
-                }
+                val isBluetoothOk =
+                        if (settings.bluetoothFilterEnabled) {
+                            // 最適化：BluetoothStateMonitor キャッシュから確認
+                            // BluetoothEventReceiver で常時更新されるため、スキャンは不要
+                            BluetoothStateMonitor.isAnyTargetDeviceConnectedFromCache(
+                                    settings.bluetoothTargetDevices,
+                            )
+                        } else {
+                            true
+                        }
 
                 if (hour in settings.startHour..settings.endHour &&
-                    dayOfWeek in settings.enabledDays &&
-                    !isHoliday &&
-                    isBluetoothOk
+                                dayOfWeek in settings.enabledDays &&
+                                !isHoliday &&
+                                isBluetoothOk
                 ) {
                     NotificationHelper.postTimeSignal(context, hour)
                     Log.i(TAG, "%02d:00 時報を通知しました".format(hour))
                 } else {
                     Log.d(
-                        TAG,
-                        "条件不一致のためスキップ (hour=$hour, dayOfWeek=$dayOfWeek, isHoliday=$isHoliday, isBluetoothOk=$isBluetoothOk)",
+                            TAG,
+                            "条件不一致のためスキップ (hour=$hour, dayOfWeek=$dayOfWeek, isHoliday=$isHoliday, isBluetoothOk=$isBluetoothOk)",
                     )
                 }
             }
@@ -59,14 +61,15 @@ class TimeSignalReceiver : BroadcastReceiver() {
         if (HolidayRepository.isCacheExpired(context)) {
             val pendingResult = goAsync()
             Thread {
-                try {
-                    HolidayRepository.refreshSync(context)
-                } catch (e: Exception) {
-                    Log.e(TAG, "祝日データの更新に失敗しました", e)
-                } finally {
-                    pendingResult.finish()
-                }
-            }.start()
+                        try {
+                            HolidayRepository.refreshSync(context)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "祝日データの更新に失敗しました", e)
+                        } finally {
+                            pendingResult.finish()
+                        }
+                    }
+                    .start()
         }
     }
 }

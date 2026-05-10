@@ -1,7 +1,7 @@
 package com.example.hourlychime
 
-import android.app.AlarmManager
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.os.Build
@@ -15,12 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -37,28 +37,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeSignalScreen(
-    onRequestExactAlarmPermission: () -> Unit,
-    onRequestBluetoothPermission: () -> Unit,
+        onRequestExactAlarmPermission: () -> Unit,
+        onRequestBluetoothPermission: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var settings by remember { mutableStateOf(TimeSignalPrefs.load(context)) }
     var nextChimeText by remember { mutableStateOf("計算中...") }
-    var hasExactAlarmPermission by remember {
-        mutableStateOf(canScheduleExactAlarms(context))
-    }
+    var hasExactAlarmPermission by remember { mutableStateOf(canScheduleExactAlarms(context)) }
     var hasBluetoothPermission by remember {
         mutableStateOf(BluetoothHelper.hasBluetoothConnectPermission(context))
     }
@@ -77,6 +75,8 @@ fun TimeSignalScreen(
     val saveAndReschedule: (TimeSignalSettings) -> Unit = { s ->
         settings = s
         TimeSignalPrefs.save(context, s)
+        // 設定変更時はスケジュールキャッシュを無効化（次回スケジュール時に再計算）
+        ScheduleCache.invalidate(context)
         TimeSignalScheduler.schedule(context)
         scope.launch(Dispatchers.IO) {
             val text = calcNextChimeText(context, s)
@@ -85,37 +85,33 @@ fun TimeSignalScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // 正確なアラーム権限バナー（Android 12+ で未許可のとき表示）
         if (!hasExactAlarmPermission) {
             Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                ),
+                    colors =
+                            CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                            ),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "正確なアラームの許可が必要です",
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.weight(1f),
+                            text = "正確なアラームの許可が必要です",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = {
-                        onRequestExactAlarmPermission()
-                        hasExactAlarmPermission = canScheduleExactAlarms(context)
-                    }) {
-                        Text("設定へ")
-                    }
+                    TextButton(
+                            onClick = {
+                                onRequestExactAlarmPermission()
+                                hasExactAlarmPermission = canScheduleExactAlarms(context)
+                            }
+                    ) { Text("設定へ") }
                 }
             }
         }
@@ -123,23 +119,21 @@ fun TimeSignalScreen(
         // マスター ON/OFF
         Card {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text("時報", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = nextChimeText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = nextChimeText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
-                    checked = settings.enabled,
-                    onCheckedChange = { saveAndReschedule(settings.copy(enabled = it)) },
+                        checked = settings.enabled,
+                        onCheckedChange = { saveAndReschedule(settings.copy(enabled = it)) },
                 )
             }
         }
@@ -147,15 +141,13 @@ fun TimeSignalScreen(
         // 曜日設定
         Card {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 Text("曜日", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 DayOfWeekSelector(
-                    enabledDays = settings.enabledDays,
-                    onDaysChanged = { saveAndReschedule(settings.copy(enabledDays = it)) },
+                        enabledDays = settings.enabledDays,
+                        onDaysChanged = { saveAndReschedule(settings.copy(enabledDays = it)) },
                 )
             }
         }
@@ -163,46 +155,44 @@ fun TimeSignalScreen(
         // 時刻範囲設定
         Card {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 Text("時刻範囲", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "%02d:00 〜 %02d:00".format(settings.startHour, settings.endHour),
-                    style = MaterialTheme.typography.bodyLarge,
+                        text = "%02d:00 〜 %02d:00".format(settings.startHour, settings.endHour),
+                        style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "開始時刻",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        "開始時刻",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Slider(
-                    value = settings.startHour.toFloat(),
-                    onValueChange = { v ->
-                        val h = v.roundToInt().coerceAtMost(settings.endHour)
-                        saveAndReschedule(settings.copy(startHour = h))
-                    },
-                    valueRange = 0f..23f,
-                    steps = 22, // 0..23 の 24 段階
+                        value = settings.startHour.toFloat(),
+                        onValueChange = { v ->
+                            val h = v.roundToInt().coerceAtMost(settings.endHour)
+                            saveAndReschedule(settings.copy(startHour = h))
+                        },
+                        valueRange = 0f..23f,
+                        steps = 22, // 0..23 の 24 段階
                 )
 
                 Text(
-                    "終了時刻",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        "終了時刻",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Slider(
-                    value = settings.endHour.toFloat(),
-                    onValueChange = { v ->
-                        val h = v.roundToInt().coerceAtLeast(settings.startHour)
-                        saveAndReschedule(settings.copy(endHour = h))
-                    },
-                    valueRange = 0f..23f,
-                    steps = 22,
+                        value = settings.endHour.toFloat(),
+                        onValueChange = { v ->
+                            val h = v.roundToInt().coerceAtLeast(settings.startHour)
+                            saveAndReschedule(settings.copy(endHour = h))
+                        },
+                        valueRange = 0f..23f,
+                        steps = 22,
                 )
             }
         }
@@ -210,38 +200,36 @@ fun TimeSignalScreen(
         // 祝日スキップ設定
         Card {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("祝日はスキップ", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = "国民の祝日には時報を鳴らさない",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "国民の祝日には時報を鳴らさない",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
-                    checked = settings.skipHolidays,
-                    onCheckedChange = { saveAndReschedule(settings.copy(skipHolidays = it)) },
+                        checked = settings.skipHolidays,
+                        onCheckedChange = { saveAndReschedule(settings.copy(skipHolidays = it)) },
                 )
             }
         }
 
         // Bluetooth フィルター設定
         BluetoothFilterCard(
-            settings = settings,
-            hasBluetoothPermission = hasBluetoothPermission,
-            bondedDevices = bondedDevices,
-            onRequestBluetoothPermission = {
-                onRequestBluetoothPermission()
-                hasBluetoothPermission = BluetoothHelper.hasBluetoothConnectPermission(context)
-                bondedDevices = BluetoothHelper.getBondedDevices(context)
-            },
-            onSettingsChanged = saveAndReschedule,
+                settings = settings,
+                hasBluetoothPermission = hasBluetoothPermission,
+                bondedDevices = bondedDevices,
+                onRequestBluetoothPermission = {
+                    onRequestBluetoothPermission()
+                    hasBluetoothPermission = BluetoothHelper.hasBluetoothConnectPermission(context)
+                    bondedDevices = BluetoothHelper.getBondedDevices(context)
+                },
+                onSettingsChanged = saveAndReschedule,
         )
     }
 }
@@ -249,39 +237,37 @@ fun TimeSignalScreen(
 @SuppressLint("MissingPermission")
 @Composable
 private fun BluetoothFilterCard(
-    settings: TimeSignalSettings,
-    hasBluetoothPermission: Boolean,
-    bondedDevices: List<BluetoothDevice>,
-    onRequestBluetoothPermission: () -> Unit,
-    onSettingsChanged: (TimeSignalSettings) -> Unit,
+        settings: TimeSignalSettings,
+        hasBluetoothPermission: Boolean,
+        bondedDevices: List<BluetoothDevice>,
+        onRequestBluetoothPermission: () -> Unit,
+        onSettingsChanged: (TimeSignalSettings) -> Unit,
 ) {
     Card {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "特定のBluetooth端末と接続時のみ",
-                        style = MaterialTheme.typography.titleMedium,
+                            "特定のBluetooth端末と接続時のみ",
+                            style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = "選択した端末が接続中のときのみ時報を鳴らす",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "選択した端末が接続中のときのみ時報を鳴らす",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(
-                    checked = settings.bluetoothFilterEnabled,
-                    onCheckedChange = {
-                        onSettingsChanged(settings.copy(bluetoothFilterEnabled = it))
-                    },
+                        checked = settings.bluetoothFilterEnabled,
+                        onCheckedChange = {
+                            onSettingsChanged(settings.copy(bluetoothFilterEnabled = it))
+                        },
                 )
             }
 
@@ -293,31 +279,29 @@ private fun BluetoothFilterCard(
                 if (!hasBluetoothPermission) {
                     // 権限なしバナー
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Bluetooth権限が必要です",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.weight(1f),
+                                text = "Bluetooth権限が必要です",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = onRequestBluetoothPermission) {
-                            Text("許可する")
-                        }
+                        TextButton(onClick = onRequestBluetoothPermission) { Text("許可する") }
                     }
                 } else if (bondedDevices.isEmpty()) {
                     Text(
-                        text = "ペアリング済みのBluetoothデバイスがありません",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "ペアリング済みのBluetoothデバイスがありません",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     Text(
-                        text = "対象デバイスを選択",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "対象デバイスを選択",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(4.dp))
                     bondedDevices.forEach { device ->
@@ -325,28 +309,29 @@ private fun BluetoothFilterCard(
                         val name = runCatching { device.name }.getOrNull() ?: address
                         val isSelected = address in settings.bluetoothTargetDevices
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = { checked ->
-                                    val newDevices = if (checked) {
-                                        settings.bluetoothTargetDevices + address
-                                    } else {
-                                        settings.bluetoothTargetDevices - address
-                                    }
-                                    onSettingsChanged(
-                                        settings.copy(bluetoothTargetDevices = newDevices),
-                                    )
-                                },
+                                    checked = isSelected,
+                                    onCheckedChange = { checked ->
+                                        val newDevices =
+                                                if (checked) {
+                                                    settings.bluetoothTargetDevices + address
+                                                } else {
+                                                    settings.bluetoothTargetDevices - address
+                                                }
+                                        onSettingsChanged(
+                                                settings.copy(bluetoothTargetDevices = newDevices),
+                                        )
+                                    },
                             )
                             Column {
                                 Text(name, style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    address,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        address,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -360,31 +345,33 @@ private fun BluetoothFilterCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DayOfWeekSelector(
-    enabledDays: Set<Int>,
-    onDaysChanged: (Set<Int>) -> Unit,
+        enabledDays: Set<Int>,
+        onDaysChanged: (Set<Int>) -> Unit,
 ) {
-    val days = listOf(
-        Calendar.SUNDAY to "日",
-        Calendar.MONDAY to "月",
-        Calendar.TUESDAY to "火",
-        Calendar.WEDNESDAY to "水",
-        Calendar.THURSDAY to "木",
-        Calendar.FRIDAY to "金",
-        Calendar.SATURDAY to "土",
-    )
+    val days =
+            listOf(
+                    Calendar.SUNDAY to "日",
+                    Calendar.MONDAY to "月",
+                    Calendar.TUESDAY to "火",
+                    Calendar.WEDNESDAY to "水",
+                    Calendar.THURSDAY to "木",
+                    Calendar.FRIDAY to "金",
+                    Calendar.SATURDAY to "土",
+            )
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         days.forEach { (dayConst, label) ->
             val selected = dayConst in enabledDays
             FilterChip(
-                selected = selected,
-                onClick = {
-                    val newDays = if (selected) enabledDays - dayConst else enabledDays + dayConst
-                    onDaysChanged(newDays)
-                },
-                label = { Text(label) },
+                    selected = selected,
+                    onClick = {
+                        val newDays =
+                                if (selected) enabledDays - dayConst else enabledDays + dayConst
+                        onDaysChanged(newDays)
+                    },
+                    label = { Text(label) },
             )
         }
     }
@@ -400,7 +387,8 @@ private fun canScheduleExactAlarms(context: Context): Boolean {
 
 private fun calcNextChimeText(context: Context, settings: TimeSignalSettings): String {
     if (!settings.enabled) return "オフ"
-    val nextMs = TimeSignalScheduler.findNextChimeTime(context, settings) ?: return "設定なし（7日以内に該当なし）"
+    val nextMs =
+            TimeSignalScheduler.findNextChimeTime(context, settings) ?: return "設定なし（7日以内に該当なし）"
     val cal = Calendar.getInstance().apply { timeInMillis = nextMs }
     return "次の時報: " + SimpleDateFormat("M/d (E) HH:00", Locale.JAPAN).format(cal.time)
 }

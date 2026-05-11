@@ -72,6 +72,28 @@
                 <action android:name="com.example.hourlychime.ACTION_SET_SKIP_HOLIDAYS" />
             </intent-filter>
         </receiver>
+
+        <!-- Galaxyルーチン「アプリの操作を実行」対応用サービス -->
+        <service
+            android:name=".QuickActionService"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.example.hourlychime.ACTION_TOGGLE_TIME_SIGNAL" />
+                <action android:name="com.example.hourlychime.ACTION_TURN_ON" />
+                <action android:name="com.example.hourlychime.ACTION_TURN_OFF" />
+            </intent-filter>
+        </service>
+
+        <!-- Galaxyルーチン用QuickAction定義Activity -->
+        <activity
+            android:name=".QuickActionActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay" >
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+                <action android:name="android.app.action.DEFINE_QUICKACTION" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

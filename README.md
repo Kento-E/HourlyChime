@@ -82,6 +82,44 @@ JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true -Dhttps.protocols=TLSv1.2,TLS
 テスター（`esashika.kento@icloud.com`）に招待メールが届きます。
 アプリをインストールして token を取得してください。
 
+### GitHub Actions で自動配布
+
+`main` への push または手動実行（`workflow_dispatch`）で、
+ユニットテスト実行後に Firebase App Distribution へ自動配布します。
+
+ワークフロー定義: `.github/workflows/android-distribute.yml`
+
+#### GitHub Variables（非秘密）
+
+Repository Variables として設定:
+- `RELEASE_KEY_ALIAS`: 署名キーのエイリアス（例: `hourlychime`）
+
+#### GitHub Secrets（秘密）
+
+Repository Secrets として設定:
+- `GOOGLE_SERVICES_JSON`: `app/google-services.json` の内容（生JSONまたはBase64）
+- `RELEASE_KEYSTORE_BASE64`: `app/keystore/release.jks` の Base64
+- `RELEASE_STORE_PASSWORD`: 署名キーストアのパスワード
+- `RELEASE_KEY_PASSWORD`: 署名キーのパスワード
+- `FIREBASE_TOKEN`: `firebase login:ci` で発行したトークン
+
+`RELEASE_KEYSTORE_BASE64` は以下で作成できます。
+
+```bash
+base64 -i app/keystore/release.jks | pbcopy
+```
+
+ GitHub CLI で設定する場合:
+
+```bash
+gh variable set RELEASE_KEY_ALIAS --body "hourlychime"
+gh secret set GOOGLE_SERVICES_JSON < app/google-services.json
+gh secret set RELEASE_KEYSTORE_BASE64 < app/keystore/release.jks.b64
+gh secret set RELEASE_STORE_PASSWORD
+gh secret set RELEASE_KEY_PASSWORD
+gh secret set FIREBASE_TOKEN
+```
+
 #### 認証情報の設定
 
 - **初回のみ**: `firebase login` で Firebase CLI にログインしてください

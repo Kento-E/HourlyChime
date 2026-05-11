@@ -76,7 +76,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run unit tests
-        run: ./gradlew --no-daemon test
+        run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools

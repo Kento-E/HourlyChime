@@ -7,8 +7,23 @@ plugins {
 }
 
 val localProps = Properties().apply {
-    rootProject.file("local.properties").inputStream().use { load(it) }
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
 }
+
+fun Properties.nonBlank(name: String): String? = getProperty(name)?.takeIf { it.isNotBlank() }
+
+val releaseStoreFilePath = localProps.nonBlank("RELEASE_STORE_FILE")
+val releaseStorePassword = localProps.nonBlank("RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = localProps.nonBlank("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = localProps.nonBlank("RELEASE_KEY_PASSWORD")
+val hasReleaseSigningConfig =
+    releaseStoreFilePath != null &&
+        releaseStorePassword != null &&
+        releaseKeyAlias != null &&
+        releaseKeyPassword != null
 
 val firebaseAppId = "1:1052281628451:android:3d20d418e11e45e48f0e96"
 val firebaseTesters = "esashika.kento@icloud.com"
@@ -38,18 +53,22 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = file(localProps["RELEASE_STORE_FILE"] as String)
-            storePassword = localProps["RELEASE_STORE_PASSWORD"] as String
-            keyAlias = localProps["RELEASE_KEY_ALIAS"] as String
-            keyPassword = localProps["RELEASE_KEY_PASSWORD"] as String
+        if (hasReleaseSigningConfig) {
+            create("release") {
+                storeFile = file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -88,7 +107,7 @@ dependencies {
 tasks.register<Exec>("appDistributionUploadRelease") {
     group = "distribution"
     description = "Upload the release APK to Firebase App Distribution via Firebase CLI."
-    dependsOn("assembleRelease")
+    dependsOn("verifyReleaseSigning", "assembleRelease")
 
     doFirst {
         val apkFile = layout.buildDirectory.file("outputs/apk/release/app-release.apk").get().asFile
@@ -107,5 +126,32 @@ tasks.register<Exec>("appDistributionUploadRelease") {
             "--release-notes",
             firebaseReleaseNotes,
         )
+    }
+}
+
+tasks.register("verifyReleaseSigning") {
+    group = "verification"
+    description = "Verify release signing properties before assembling or distributing release build."
+
+    doLast {
+        val missingKeys = buildList {
+            if (releaseStoreFilePath == null) add("RELEASE_STORE_FILE")
+            if (releaseStorePassword == null) add("RELEASE_STORE_PASSWORD")
+            if (releaseKeyAlias == null) add("RELEASE_KEY_ALIAS")
+            if (releaseKeyPassword == null) add("RELEASE_KEY_PASSWORD")
+        }
+
+        if (missingKeys.isNotEmpty()) {
+            throw GradleException(
+                "Missing release signing values in local.properties: ${missingKeys.joinToString(", ")}" +
+                    ". Unit tests can run without these values, but release build/distribution requires them."
+            )
+        }
+
+        val keystorePath = releaseStoreFilePath!!
+        val keystoreFile = file(keystorePath)
+        if (!keystoreFile.exists()) {
+            throw GradleException("Release keystore not found: ${keystoreFile.absolutePath}")
+        }
     }
 }

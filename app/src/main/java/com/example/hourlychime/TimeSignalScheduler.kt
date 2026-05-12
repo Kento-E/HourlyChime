@@ -44,7 +44,7 @@ object TimeSignalScheduler {
                         Log.d(TAG, "スケジュールキャッシュを使用: ${java.util.Date(cached)}")
                         cached
                     } else {
-                        Log.d(TAG, "キャッシュ時刻が過去のため再計算します: ${java.util.Date(cached)}")
+                        Log.d(TAG, "キャッシュ時刻が過去のため再計算を試みます: ${java.util.Date(cached)}")
                         // 期限切れキャッシュなので次の有効時刻を再計算して保存
                         findNextChimeTime(context, settings)?.also { time ->
                             ScheduleCache.saveNextAlarmTime(context, time, settings)

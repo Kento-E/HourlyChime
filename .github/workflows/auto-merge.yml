@@ -5,6 +5,7 @@ on:
     types: [submitted]
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -30,6 +31,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |
           echo "PR #${PR_NUMBER} が承認されました。自動マージを開始します..."
 
@@ -51,6 +53,24 @@ jobs:
           gh pr merge ${PR_NUMBER} --repo ${{ github.repository }} --squash --auto --delete-branch
 
           echo "✅ PR #${PR_NUMBER} の自動マージが有効化されました"
+
+          echo "🔍 マージ完了を確認中..."
+          for i in {1..24}; do
+            MERGED_AT=$(gh pr view "${PR_NUMBER}" --repo ${{ github.repository }} --json mergedAt --jq '.mergedAt')
+            if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          MERGED_AT=$(gh pr view "${PR_NUMBER}" --repo ${{ github.repository }} --json mergedAt --jq '.mergedAt')
+          if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ] && [ "${BASE_BRANCH}" = "main" ]; then
+            echo "🚀 Android Distribute ワークフローを手動起動します..."
+            gh workflow run android-distribute.yml --repo ${{ github.repository }} --ref main
+          else
+            echo "ℹ️ PRはまだマージされていないか、baseがmainではないため Android Distribute の起動をスキップしました。"
+          fi
+
           echo ""
           echo "📝 今後の動作:"
           echo "  - ブランチ保護ルールや必須ステータスチェックが設定されている場合、それらの条件が満たされると自動的に Squash and Merge が実行されます。"

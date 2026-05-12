@@ -36,11 +36,24 @@ object TimeSignalScheduler {
         }
 
         // キャッシュが有効かを確認。有効なら前回計算した時刻を使用
+        val now = System.currentTimeMillis()
         val nextTime =
                 if (ScheduleCache.isCacheValid(context, settings)) {
                     val cached = ScheduleCache.getCachedNextAlarmTime()
-                    Log.d(TAG, "スケジュールキャッシュを使用: ${java.util.Date(cached)}")
-                    cached
+                    if (cached > now) {
+                        Log.d(TAG, "スケジュールキャッシュを使用: ${java.util.Date(cached)}")
+                        cached
+                    } else {
+                        Log.d(TAG, "キャッシュ時刻が過去のため再計算します: ${java.util.Date(cached)}")
+                        // 期限切れキャッシュなので次の有効時刻を再計算して保存
+                        findNextChimeTime(context, settings)?.also { time ->
+                            ScheduleCache.saveNextAlarmTime(context, time, settings)
+                        }
+                                ?: run {
+                                    Log.d(TAG, "有効な次の時報時刻が見つかりませんでした（7日以内に該当なし）")
+                                    return
+                                }
+                    }
                 } else {
                     // 無効なら新たに計算して保存
                     findNextChimeTime(context, settings)?.also { time ->

@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">HourlyChime</string>
+    <string name="shortcut_toggle_short_label">時報切替</string>
+    <string name="shortcut_toggle_long_label">時報のON/OFFを切り替える</string>
+    <string name="shortcut_turn_on_short_label">時報ON</string>
+    <string name="shortcut_turn_on_long_label">時報をONにする</string>
+    <string name="shortcut_turn_off_short_label">時報OFF</string>
+    <string name="shortcut_turn_off_long_label">時報をOFFにする</string>
 </resources>

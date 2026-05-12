@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="toggle_time_signal"
+        android:enabled="true"
+        android:icon="@drawable/icon"
+        android:shortcutShortLabel="@string/shortcut_toggle_short_label"
+        android:shortcutLongLabel="@string/shortcut_toggle_long_label">
+        <intent
+            android:action="com.example.hourlychime.ACTION_TOGGLE_TIME_SIGNAL"
+            android:targetPackage="com.example.hourlychime"
+            android:targetClass="com.example.hourlychime.ShortcutActionActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="turn_on_time_signal"
+        android:enabled="true"
+        android:icon="@drawable/icon"
+        android:shortcutShortLabel="@string/shortcut_turn_on_short_label"
+        android:shortcutLongLabel="@string/shortcut_turn_on_long_label">
+        <intent
+            android:action="com.example.hourlychime.ACTION_TURN_ON"
+            android:targetPackage="com.example.hourlychime"
+            android:targetClass="com.example.hourlychime.ShortcutActionActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="turn_off_time_signal"
+        android:enabled="true"
+        android:icon="@drawable/icon"
+        android:shortcutShortLabel="@string/shortcut_turn_off_short_label"
+        android:shortcutLongLabel="@string/shortcut_turn_off_long_label">
+        <intent
+            android:action="com.example.hourlychime.ACTION_TURN_OFF"
+            android:targetPackage="com.example.hourlychime"
+            android:targetClass="com.example.hourlychime.ShortcutActionActivity" />
+    </shortcut>
+</shortcuts>

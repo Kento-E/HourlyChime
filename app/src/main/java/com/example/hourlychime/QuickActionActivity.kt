@@ -12,10 +12,6 @@ import android.util.Log
 class QuickActionActivity : Activity() {
     companion object {
         private const val TAG = "QuickActionActivity"
-
-        const val ACTION_TOGGLE_TIME_SIGNAL = "com.example.hourlychime.ACTION_TOGGLE_TIME_SIGNAL"
-        const val ACTION_TURN_ON = "com.example.hourlychime.ACTION_TURN_ON"
-        const val ACTION_TURN_OFF = "com.example.hourlychime.ACTION_TURN_OFF"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,9 +48,9 @@ class QuickActionActivity : Activity() {
             )
         val shortcutActions =
             arrayOf(
-                ACTION_TOGGLE_TIME_SIGNAL,
-                ACTION_TURN_ON,
-                ACTION_TURN_OFF,
+                TimeSignalActionHandler.ACTION_TOGGLE_TIME_SIGNAL,
+                TimeSignalActionHandler.ACTION_TURN_ON,
+                TimeSignalActionHandler.ACTION_TURN_OFF,
             )
 
         // 最初のアクションをデフォルトとして返す
@@ -76,7 +72,7 @@ class QuickActionActivity : Activity() {
         // Galaxy Routineの場合、クイックアクション一覧を定義して返す
         val actionName = "時報ON/OFF 切り替え"
         val shortcutIntent = Intent(this, QuickActionService::class.java).apply {
-            action = ACTION_TOGGLE_TIME_SIGNAL
+            action = TimeSignalActionHandler.ACTION_TOGGLE_TIME_SIGNAL
         }
 
         // 最初のアクションを返す（選択肢は Galaxy側で表示される）

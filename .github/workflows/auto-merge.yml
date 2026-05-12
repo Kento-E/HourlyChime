@@ -54,7 +54,8 @@ jobs:
 
           echo "✅ PR #${PR_NUMBER} の自動マージが有効化されました"
 
-          MAX_POLLS=24 # 24 * 5秒 = 最大120秒待機
+          POLL_INTERVAL=5
+          MAX_POLLS=24 # 24回 * 5秒 = 最大120秒待機
           echo "🔍 マージ完了を確認中...（最大120秒待機）"
           MERGED_AT=""
           for ((i=1; i<=MAX_POLLS; i++)); do
@@ -63,13 +64,20 @@ jobs:
               echo "✅ PRのマージ完了を確認しました（mergedAt: ${MERGED_AT}）"
               break
             fi
-            sleep 5
+            if [ "${i}" -lt "${MAX_POLLS}" ]; then
+              sleep "${POLL_INTERVAL}"
+            fi
           done
 
-          if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ] && [ "${BASE_BRANCH}" = "main" ]; then
+          IS_MERGED=false
+          if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ]; then
+            IS_MERGED=true
+          fi
+
+          if [ "${IS_MERGED}" = "true" ] && [ "${BASE_BRANCH}" = "main" ]; then
             echo "🚀 Android Distribute ワークフローを手動起動します..."
             gh workflow run android-distribute.yml --repo ${{ github.repository }} --ref main
-          elif [ "${MERGED_AT}" = "null" ] || [ -z "${MERGED_AT}" ]; then
+          elif [ "${IS_MERGED}" = "false" ]; then
             echo "ℹ️ 120秒以内にPRのマージ完了を確認できなかったため、Android Distribute の起動をスキップしました。"
           else
             echo "ℹ️ PRのbaseがmainではないため、Android Distribute の起動をスキップしました。"

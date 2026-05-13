@@ -26,11 +26,20 @@ class TimeSignalReceiver : BroadcastReceiver() {
 
                 val isBluetoothOk =
                         if (settings.bluetoothFilterEnabled) {
-                            // 最適化：BluetoothStateMonitor キャッシュから確認
-                            // BluetoothEventReceiver で常時更新されるため、スキャンは不要
-                            BluetoothStateMonitor.isAnyTargetDeviceConnectedFromCache(
-                                    settings.bluetoothTargetDevices,
-                            )
+                            if (BluetoothStateMonitor.isInitialized()) {
+                                // 最適化：BluetoothStateMonitor キャッシュから確認
+                                // BluetoothEventReceiver で常時更新されるため、スキャンは不要
+                                BluetoothStateMonitor.isAnyTargetDeviceConnectedFromCache(
+                                        settings.bluetoothTargetDevices,
+                                )
+                            } else {
+                                // キャッシュ未初期化（プロセス再起動直後など）の場合は直接スキャンする
+                                Log.d(TAG, "Bluetoothキャッシュ未初期化のため直接スキャンを実行")
+                                BluetoothHelper.isAnyTargetDeviceConnected(
+                                        context,
+                                        settings.bluetoothTargetDevices,
+                                )
+                            }
                         } else {
                             true
                         }

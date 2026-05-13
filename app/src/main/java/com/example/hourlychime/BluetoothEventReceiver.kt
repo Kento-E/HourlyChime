@@ -1,6 +1,7 @@
 package com.example.hourlychime
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -24,7 +25,9 @@ class BluetoothEventReceiver : BroadcastReceiver() {
           Log.d(TAG, "Bluetooth OFF: キャッシュをクリア")
         }
       }
-      BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
+      BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED,
+      BluetoothDevice.ACTION_ACL_CONNECTED,
+      BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
         // 接続状態の変化を検知してキャッシュを再構築
         if (BluetoothHelper.hasBluetoothConnectPermission(context)) {
           val connectedAddresses = queryConnectedDeviceAddresses(context)

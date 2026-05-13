@@ -33,12 +33,17 @@ class TimeSignalReceiver : BroadcastReceiver() {
                                         settings.bluetoothTargetDevices,
                                 )
                             } else {
-                                // キャッシュ未初期化（プロセス再起動直後など）の場合は直接スキャンする
-                                Log.d(TAG, "Bluetoothキャッシュ未初期化のため直接スキャンを実行")
-                                BluetoothHelper.isAnyTargetDeviceConnected(
-                                        context,
-                                        settings.bluetoothTargetDevices,
-                                )
+                                // キャッシュ未初期化（プロセス再起動直後など）の場合の処理
+                                if (BluetoothHelper.hasBluetoothConnectPermission(context)) {
+                                    Log.d(TAG, "Bluetoothキャッシュ未初期化のため直接スキャンを実行")
+                                    BluetoothHelper.isAnyTargetDeviceConnected(
+                                            context,
+                                            settings.bluetoothTargetDevices,
+                                    )
+                                } else {
+                                    Log.d(TAG, "Bluetoothキャッシュ未初期化かつ権限なし: false を返す")
+                                    false
+                                }
                             }
                         } else {
                             true

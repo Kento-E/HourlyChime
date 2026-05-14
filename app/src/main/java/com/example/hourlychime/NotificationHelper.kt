@@ -3,6 +3,7 @@ package com.example.hourlychime
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
@@ -49,9 +50,11 @@ object NotificationHelper {
         vibrateFixedPattern(context)
 
         val text = "%02d:00 の時報".format(hour)
+        val largeIcon = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setLargeIcon(largeIcon)
                 .setContentTitle("時報")
                 .setContentText(text)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

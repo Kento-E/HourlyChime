@@ -3,7 +3,8 @@
     "git rev-parse": true,
     "git push": true,
     "convert": true,
-    "firebase": true
+    "firebase": true,
+    "command": true
   },
   "cSpell.words": ["hourlychime"]
 }

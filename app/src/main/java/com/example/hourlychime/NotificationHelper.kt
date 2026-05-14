@@ -6,20 +6,15 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 
 object NotificationHelper {
-    const val CHANNEL_ID = "time_signal_channel_v2"
+    const val CHANNEL_ID = "time_signal_channel_v3"
     private const val NOTIFICATION_ID = 2001
-    private val DEFAULT_VIBRATION_PATTERN = longArrayOf(0L, 120L, 100L, 120L)
-
-    /** 先頭は待機時間(ms)。例: 0, 120, 100, 120 = 短いバイブ2連。 */
-    @Volatile private var vibrationPattern: LongArray = DEFAULT_VIBRATION_PATTERN.copyOf()
-
-    fun setVibrationPattern(pattern: LongArray) {
-        require(pattern.isNotEmpty()) { "Vibration pattern must not be empty." }
-        vibrationPattern = pattern.copyOf()
-    }
+    private val FIXED_VIBRATION_PATTERN = longArrayOf(0L, 120L, 100L, 120L)
 
     /** 時報通知チャンネルを作成する。アプリ起動時に必ず呼び出すこと（冪等）。 */
     fun createChannel(context: Context) {
@@ -41,8 +36,8 @@ object NotificationHelper {
                         .apply {
                             description = "毎正時の時報通知"
                             setSound(soundUri, audioAttrs)
-                            enableVibration(true)
-                            setVibrationPattern(vibrationPattern)
+                            // バイブはチャネル側ではなくアプリ側で固定制御する。
+                            enableVibration(false)
                         }
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -51,6 +46,8 @@ object NotificationHelper {
 
     /** 時報通知を発行する。 */
     fun postTimeSignal(context: Context, hour: Int) {
+        vibrateFixedPattern(context)
+
         val text = "%02d:00 の時報".format(hour)
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
@@ -58,12 +55,31 @@ object NotificationHelper {
                 .setContentTitle("時報")
                 .setContentText(text)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setVibrate(vibrationPattern)
                 .setAutoCancel(true)
                 .setTimeoutAfter(60_000L) // 1分後に自動削除
                 .build()
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(NOTIFICATION_ID, notification)
+    }
+
+    private fun vibrateFixedPattern(context: Context) {
+        val vibrator =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vm = context.getSystemService(VibratorManager::class.java)
+                    vm?.defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                }
+
+        if (vibrator == null || !vibrator.hasVibrator()) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(FIXED_VIBRATION_PATTERN, -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(FIXED_VIBRATION_PATTERN, -1)
+        }
     }
 }

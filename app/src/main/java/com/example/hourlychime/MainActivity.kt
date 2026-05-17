@@ -82,11 +82,15 @@ class MainActivity : ComponentActivity() {
                         getString(R.string.token_fetch_failed, task.exception?.message ?: "")
                     }
         }
-        val tabs = listOf(getString(R.string.tab_settings), getString(R.string.tab_fcm_token))
-
         setContent {
             HourlyChimeTheme {
                 var selectedTab by remember { mutableIntStateOf(0) }
+                val settingsTabTitle = stringResource(R.string.tab_settings)
+                val tokenTabTitle = stringResource(R.string.tab_fcm_token)
+                val tabs =
+                        remember(settingsTabTitle, tokenTabTitle) {
+                            listOf(settingsTabTitle, tokenTabTitle)
+                        }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {

@@ -56,7 +56,7 @@ fun TimeSignalScreen(
     val scope = rememberCoroutineScope()
 
     var settings by remember { mutableStateOf(TimeSignalPrefs.load(context)) }
-    var nextChimeText by remember { mutableStateOf(context.getString(R.string.next_chime_calculating)) }
+    var nextChimeText by remember { mutableStateOf(stringResource(R.string.next_chime_calculating)) }
     var hasExactAlarmPermission by remember { mutableStateOf(canScheduleExactAlarms(context)) }
     var hasBluetoothPermission by remember {
         mutableStateOf(BluetoothHelper.hasBluetoothConnectPermission(context))

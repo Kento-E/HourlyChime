@@ -352,17 +352,32 @@ private fun DayOfWeekSelector(
         enabledDays: Set<Int>,
         onDaysChanged: (Set<Int>) -> Unit,
 ) {
+    val daySunday = stringResource(R.string.day_sunday)
+    val dayMonday = stringResource(R.string.day_monday)
+    val dayTuesday = stringResource(R.string.day_tuesday)
+    val dayWednesday = stringResource(R.string.day_wednesday)
+    val dayThursday = stringResource(R.string.day_thursday)
+    val dayFriday = stringResource(R.string.day_friday)
+    val daySaturday = stringResource(R.string.day_saturday)
     val days =
-            remember {
-            listOf(
-                    Calendar.SUNDAY to stringResource(R.string.day_sunday),
-                    Calendar.MONDAY to stringResource(R.string.day_monday),
-                    Calendar.TUESDAY to stringResource(R.string.day_tuesday),
-                    Calendar.WEDNESDAY to stringResource(R.string.day_wednesday),
-                    Calendar.THURSDAY to stringResource(R.string.day_thursday),
-                    Calendar.FRIDAY to stringResource(R.string.day_friday),
-                    Calendar.SATURDAY to stringResource(R.string.day_saturday),
-            )
+            remember(
+                    daySunday,
+                    dayMonday,
+                    dayTuesday,
+                    dayWednesday,
+                    dayThursday,
+                    dayFriday,
+                    daySaturday,
+            ) {
+                listOf(
+                        Calendar.SUNDAY to daySunday,
+                        Calendar.MONDAY to dayMonday,
+                        Calendar.TUESDAY to dayTuesday,
+                        Calendar.WEDNESDAY to dayWednesday,
+                        Calendar.THURSDAY to dayThursday,
+                        Calendar.FRIDAY to dayFriday,
+                        Calendar.SATURDAY to daySaturday,
+                )
             }
     Row(
             modifier = Modifier.fillMaxWidth(),

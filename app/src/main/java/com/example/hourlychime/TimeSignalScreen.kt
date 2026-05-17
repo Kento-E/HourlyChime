@@ -56,7 +56,10 @@ fun TimeSignalScreen(
     val scope = rememberCoroutineScope()
 
     var settings by remember { mutableStateOf(TimeSignalPrefs.load(context)) }
-    var nextChimeText by remember { mutableStateOf(stringResource(R.string.next_chime_calculating)) }
+    val nextChimeCalculatingText = stringResource(R.string.next_chime_calculating)
+    var nextChimeText by remember(nextChimeCalculatingText) {
+        mutableStateOf(nextChimeCalculatingText)
+    }
     var hasExactAlarmPermission by remember { mutableStateOf(canScheduleExactAlarms(context)) }
     var hasBluetoothPermission by remember {
         mutableStateOf(BluetoothHelper.hasBluetoothConnectPermission(context))
@@ -350,6 +353,7 @@ private fun DayOfWeekSelector(
         onDaysChanged: (Set<Int>) -> Unit,
 ) {
     val days =
+            remember {
             listOf(
                     Calendar.SUNDAY to stringResource(R.string.day_sunday),
                     Calendar.MONDAY to stringResource(R.string.day_monday),
@@ -359,6 +363,7 @@ private fun DayOfWeekSelector(
                     Calendar.FRIDAY to stringResource(R.string.day_friday),
                     Calendar.SATURDAY to stringResource(R.string.day_saturday),
             )
+            }
     Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,

@@ -157,8 +157,6 @@ fun TimeSignalScreen(
             Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
-                Text("時刻範囲", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
                 Text(
                         text = "%02d:00 〜 %02d:00".format(settings.startHour, settings.endHour),
                         style = MaterialTheme.typography.bodyLarge,
@@ -166,7 +164,7 @@ fun TimeSignalScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                        "開始時刻",
+                        "Start",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -181,7 +179,7 @@ fun TimeSignalScreen(
                 )
 
                 Text(
-                        "終了時刻",
+                        "Stop",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -390,5 +388,5 @@ private fun calcNextChimeText(context: Context, settings: TimeSignalSettings): S
     val nextMs =
             TimeSignalScheduler.findNextChimeTime(context, settings) ?: return "設定なし（7日以内に該当なし）"
     val cal = Calendar.getInstance().apply { timeInMillis = nextMs }
-    return "次の時報: " + SimpleDateFormat("M/d (E) HH:00", Locale.JAPAN).format(cal.time)
+    return "Next: " + SimpleDateFormat("M/d (E) HH:00", Locale.JAPAN).format(cal.time)
 }

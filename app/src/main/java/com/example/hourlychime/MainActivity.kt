@@ -20,7 +20,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.hourlychime.ui.theme.HourlyChimeTheme
@@ -83,7 +85,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             HourlyChimeTheme {
                 var selectedTab by remember { mutableIntStateOf(0) }
-                val tabs = listOf("時報設定", "FCM Token")
+                val tabs = listOf("Settings", "FCM Token")
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
@@ -151,13 +153,13 @@ fun TokenScreen(token: String, modifier: Modifier = Modifier) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
+        IconButton(
                 onClick = {
                     val clipboard =
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("FCM Token", token))
                     Toast.makeText(context, "クリップボードにコピーしました", Toast.LENGTH_SHORT).show()
                 }
-        ) { Text("クリップボードにコピー") }
+        ) { Icon(painterResource(R.drawable.ic_content_copy), contentDescription = "Copy") }
     }
 }

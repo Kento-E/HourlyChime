@@ -162,7 +162,12 @@ fun TimeSignalScreen(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 Text(
-                        text = stringResource(R.string.time_range_format, settings.startHour, settings.endHour),
+                        text =
+                                stringResource(
+                                        R.string.time_range_format,
+                                        "%02d:00".format(settings.startHour),
+                                        "%02d:00".format(settings.endHour),
+                                ),
                         style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))

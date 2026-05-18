@@ -65,10 +65,22 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         val googleMavenMirrorUrls = (gradle.extra["googleMavenMirrorUrls"] as? List<*>)
-            ?.map { it as? String ?: throw GradleException("Invalid googleMavenMirrorUrls entry type.") }
-            ?: throw GradleException("Missing googleMavenMirrorUrls in Gradle extra properties.")
+            ?.map {
+                it as? String ?: throw GradleException(
+                    "Expected String in googleMavenMirrorUrls list, but found ${it?.javaClass?.name ?: "null"}."
+                )
+            }
+            ?: throw GradleException(
+                "googleMavenMirrorUrls is not set in gradle.extra. " +
+                    "Ensure pluginManagement.repositories initializes it from " +
+                    "googleMavenMirrorUrls or GOOGLE_MAVEN_MIRROR_URLS."
+            )
         val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean
-            ?: throw GradleException("Missing disableDirectGoogleMaven in Gradle extra properties.")
+            ?: throw GradleException(
+                "disableDirectGoogleMaven is not set in gradle.extra. " +
+                    "Ensure pluginManagement.repositories initializes it from " +
+                    "disableDirectGoogleMaven or DISABLE_DIRECT_GOOGLE_MAVEN."
+            )
 
         mavenLocal()
         maven {

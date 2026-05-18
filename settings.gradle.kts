@@ -13,11 +13,47 @@ pluginManagement {
         }
     }
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
+        val googleMavenMirrorUrls = (
+            providers.gradleProperty("googleMavenMirrorUrls").orNull
+                ?: providers.environmentVariable("GOOGLE_MAVEN_MIRROR_URLS").orNull
+            )
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            .orEmpty()
+        val disableDirectGoogleMaven = providers.gradleProperty("disableDirectGoogleMaven")
+            .orElse(providers.environmentVariable("DISABLE_DIRECT_GOOGLE_MAVEN"))
+            .map { it.equals("true", ignoreCase = true) }
+            .getOrElse(false)
+        if (disableDirectGoogleMaven && googleMavenMirrorUrls.isEmpty()) {
+            throw GradleException(
+                "disableDirectGoogleMaven=true (or DISABLE_DIRECT_GOOGLE_MAVEN=true) is set, " +
+                    "but no Google Maven mirrors are configured. " +
+                    "Set googleMavenMirrorUrls or GOOGLE_MAVEN_MIRROR_URLS."
+            )
+        }
+        gradle.extra["googleMavenMirrorUrls"] = googleMavenMirrorUrls
+        gradle.extra["disableDirectGoogleMaven"] = disableDirectGoogleMaven
+
+        googleMavenMirrorUrls.forEachIndexed { index, mirrorUrl ->
+            maven {
+                name = "GoogleMirror${index + 1}"
+                url = uri(mirrorUrl)
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
+            }
+        }
+        if (!disableDirectGoogleMaven) {
+            google {
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
             }
         }
         mavenCentral()
@@ -28,11 +64,43 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        val googleMavenMirrorUrls = (gradle.extra["googleMavenMirrorUrls"] as? List<*>)
+            ?.map {
+                it as? String ?: throw GradleException(
+                    "Expected String in googleMavenMirrorUrls list (set via googleMavenMirrorUrls " +
+                        "or GOOGLE_MAVEN_MIRROR_URLS), but found ${it?.javaClass?.name ?: "null"}."
+                )
+            }
+            ?: throw GradleException(
+                "googleMavenMirrorUrls is not set in gradle.extra. " +
+                    "Ensure pluginManagement.repositories initializes it (originally from " +
+                    "googleMavenMirrorUrls property or GOOGLE_MAVEN_MIRROR_URLS environment variable)."
+            )
+        val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean
+            ?: throw GradleException(
+                "disableDirectGoogleMaven is not set in gradle.extra. " +
+                    "Ensure pluginManagement.repositories initializes it from " +
+                    "disableDirectGoogleMaven property or DISABLE_DIRECT_GOOGLE_MAVEN environment variable."
+            )
+
         mavenLocal()
         maven {
             url = uri("$rootDir/local-maven")
         }
-        google()
+        googleMavenMirrorUrls.forEachIndexed { index, mirrorUrl ->
+            maven {
+                name = "GoogleMirror${index + 1}"
+                url = uri(mirrorUrl)
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
+            }
+        }
+        if (!disableDirectGoogleMaven) {
+            google()
+        }
         mavenCentral()
     }
 }

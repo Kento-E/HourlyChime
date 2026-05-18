@@ -205,7 +205,7 @@ export DISABLE_DIRECT_GOOGLE_MAVEN=true
 
 - `GOOGLE_MAVEN_MIRROR_URLS` はカンマ区切りで複数指定できます。
 - `DISABLE_DIRECT_GOOGLE_MAVEN=true` を指定する場合は `GOOGLE_MAVEN_MIRROR_URLS` も必ず指定してください。
-- `DISABLE_DIRECT_GOOGLE_MAVEN=true` かつ `GOOGLE_MAVEN_MIRROR_URLS` 未指定の場合は `settings.gradle.kts` で fail-fast し、ミラー未指定の旨を明示して停止します。
+- `disableDirectGoogleMaven=true`（Gradle property）または `DISABLE_DIRECT_GOOGLE_MAVEN=true`（環境変数）かつ、`googleMavenMirrorUrls` / `GOOGLE_MAVEN_MIRROR_URLS` 未指定の場合は `settings.gradle.kts` で fail-fast し、ミラー未指定の旨を明示して停止します。
 
 ### 2. `AppDistribution` プラグイン適用時に `AppExtension does not exist` が出る
 

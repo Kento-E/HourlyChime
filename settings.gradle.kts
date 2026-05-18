@@ -73,8 +73,8 @@ dependencyResolutionManagement {
             }
             ?: throw GradleException(
                 "googleMavenMirrorUrls is not set in gradle.extra. " +
-                    "Ensure pluginManagement.repositories initializes it from " +
-                    "googleMavenMirrorUrls property or GOOGLE_MAVEN_MIRROR_URLS environment variable."
+                    "Ensure pluginManagement.repositories initializes it (originally from " +
+                    "googleMavenMirrorUrls property or GOOGLE_MAVEN_MIRROR_URLS environment variable)."
             )
         val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean
             ?: throw GradleException(

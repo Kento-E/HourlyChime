@@ -26,6 +26,15 @@ pluginManagement {
             .orElse(providers.environmentVariable("DISABLE_DIRECT_GOOGLE_MAVEN"))
             .map { it.equals("true", ignoreCase = true) }
             .getOrElse(false)
+        if (disableDirectGoogleMaven && googleMavenMirrorUrls.isEmpty()) {
+            throw GradleException(
+                "disableDirectGoogleMaven=true (or DISABLE_DIRECT_GOOGLE_MAVEN=true) is set, " +
+                    "but no Google Maven mirrors are configured. " +
+                    "Set googleMavenMirrorUrls or GOOGLE_MAVEN_MIRROR_URLS."
+            )
+        }
+        gradle.extra["googleMavenMirrorUrls"] = googleMavenMirrorUrls
+        gradle.extra["disableDirectGoogleMaven"] = disableDirectGoogleMaven
 
         googleMavenMirrorUrls.forEachIndexed { index, mirrorUrl ->
             maven {
@@ -55,19 +64,10 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        val googleMavenMirrorUrls = (
-            providers.gradleProperty("googleMavenMirrorUrls").orNull
-                ?: providers.environmentVariable("GOOGLE_MAVEN_MIRROR_URLS").orNull
-            )
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotEmpty() }
-            ?.distinct()
-            .orEmpty()
-        val disableDirectGoogleMaven = providers.gradleProperty("disableDirectGoogleMaven")
-            .orElse(providers.environmentVariable("DISABLE_DIRECT_GOOGLE_MAVEN"))
-            .map { it.equals("true", ignoreCase = true) }
-            .getOrElse(false)
+        val googleMavenMirrorUrls =
+            (gradle.extra["googleMavenMirrorUrls"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+        val disableDirectGoogleMaven =
+            gradle.extra["disableDirectGoogleMaven"] as? Boolean ?: false
 
         mavenLocal()
         maven {

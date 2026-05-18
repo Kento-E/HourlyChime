@@ -65,9 +65,10 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         val googleMavenMirrorUrls = (gradle.extra["googleMavenMirrorUrls"] as? List<*>)
-            ?.filterIsInstance<String>()
-            .orEmpty()
-        val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean ?: false
+            ?.map { it as? String ?: throw GradleException("Invalid googleMavenMirrorUrls entry type.") }
+            ?: throw GradleException("Missing googleMavenMirrorUrls in Gradle extra properties.")
+        val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean
+            ?: throw GradleException("Missing disableDirectGoogleMaven in Gradle extra properties.")
 
         mavenLocal()
         maven {

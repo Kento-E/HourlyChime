@@ -13,11 +13,38 @@ pluginManagement {
         }
     }
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
+        val googleMavenMirrorUrls = (
+            providers.gradleProperty("googleMavenMirrorUrls").orNull
+                ?: providers.environmentVariable("GOOGLE_MAVEN_MIRROR_URLS").orNull
+            )
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            .orEmpty()
+        val disableDirectGoogleMaven = providers.gradleProperty("disableDirectGoogleMaven")
+            .orElse(providers.environmentVariable("DISABLE_DIRECT_GOOGLE_MAVEN"))
+            .map { it.equals("true", ignoreCase = true) }
+            .getOrElse(false)
+
+        googleMavenMirrorUrls.forEachIndexed { index, mirrorUrl ->
+            maven {
+                name = "GoogleMirror${index + 1}"
+                url = uri(mirrorUrl)
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
+            }
+        }
+        if (!disableDirectGoogleMaven || googleMavenMirrorUrls.isEmpty()) {
+            google {
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
             }
         }
         mavenCentral()
@@ -28,11 +55,38 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        val googleMavenMirrorUrls = (
+            providers.gradleProperty("googleMavenMirrorUrls").orNull
+                ?: providers.environmentVariable("GOOGLE_MAVEN_MIRROR_URLS").orNull
+            )
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            .orEmpty()
+        val disableDirectGoogleMaven = providers.gradleProperty("disableDirectGoogleMaven")
+            .orElse(providers.environmentVariable("DISABLE_DIRECT_GOOGLE_MAVEN"))
+            .map { it.equals("true", ignoreCase = true) }
+            .getOrElse(false)
+
         mavenLocal()
         maven {
             url = uri("$rootDir/local-maven")
         }
-        google()
+        googleMavenMirrorUrls.forEachIndexed { index, mirrorUrl ->
+            maven {
+                name = "GoogleMirror${index + 1}"
+                url = uri(mirrorUrl)
+                content {
+                    includeGroupByRegex("com\\.android.*")
+                    includeGroupByRegex("com\\.google.*")
+                    includeGroupByRegex("androidx.*")
+                }
+            }
+        }
+        if (!disableDirectGoogleMaven || googleMavenMirrorUrls.isEmpty()) {
+            google()
+        }
         mavenCentral()
     }
 }

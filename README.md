@@ -187,10 +187,23 @@ HourlyChime/
 
 - `./gradlew ... | tail -20` のようなパイプ付きコマンドは、Gradle の失敗が見えにくくなることがあります。
 - まずはパイプなしで実行して正しい終了コードを確認してください。
+- FW / egress 制限で `dl.google.com` に到達できない環境では、Google Maven のミラーURLを指定してください。
 
 ```bash
 ./gradlew assembleRelease
 ```
+
+```bash
+# 例: 事前に用意した Maven ミラーを使う
+export GOOGLE_MAVEN_MIRROR_URLS="https://nexus.example.com/repository/google-mirror"
+
+# direct の Google Maven を使えない環境では true にする
+export DISABLE_DIRECT_GOOGLE_MAVEN=true
+
+./gradlew --no-daemon help
+```
+
+- `GOOGLE_MAVEN_MIRROR_URLS` はカンマ区切りで複数指定できます。
 
 ### 2. `AppDistribution` プラグイン適用時に `AppExtension does not exist` が出る
 

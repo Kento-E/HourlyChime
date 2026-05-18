@@ -64,10 +64,10 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        val googleMavenMirrorUrls =
-            (gradle.extra["googleMavenMirrorUrls"] as? List<*>)?.filterIsInstance<String>().orEmpty()
-        val disableDirectGoogleMaven =
-            gradle.extra["disableDirectGoogleMaven"] as? Boolean ?: false
+        val googleMavenMirrorUrls = (gradle.extra["googleMavenMirrorUrls"] as? List<*>)
+            ?.filterIsInstance<String>()
+            .orEmpty()
+        val disableDirectGoogleMaven = gradle.extra["disableDirectGoogleMaven"] as? Boolean ?: false
 
         mavenLocal()
         maven {

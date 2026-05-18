@@ -204,6 +204,7 @@ export DISABLE_DIRECT_GOOGLE_MAVEN=true
 ```
 
 - `GOOGLE_MAVEN_MIRROR_URLS` はカンマ区切りで複数指定できます。
+- `DISABLE_DIRECT_GOOGLE_MAVEN=true` を指定する場合は `GOOGLE_MAVEN_MIRROR_URLS` も必ず指定してください。
 
 ### 2. `AppDistribution` プラグイン適用時に `AppExtension does not exist` が出る
 

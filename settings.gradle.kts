@@ -38,7 +38,7 @@ pluginManagement {
                 }
             }
         }
-        if (!disableDirectGoogleMaven || googleMavenMirrorUrls.isEmpty()) {
+        if (!disableDirectGoogleMaven) {
             google {
                 content {
                     includeGroupByRegex("com\\.android.*")
@@ -84,7 +84,7 @@ dependencyResolutionManagement {
                 }
             }
         }
-        if (!disableDirectGoogleMaven || googleMavenMirrorUrls.isEmpty()) {
+        if (!disableDirectGoogleMaven) {
             google()
         }
         mavenCentral()

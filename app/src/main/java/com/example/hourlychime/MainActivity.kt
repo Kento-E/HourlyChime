@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.hourlychime.ui.theme.HourlyChimeTheme
@@ -70,7 +71,7 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        var token by mutableStateOf("取得中...")
+        var token by mutableStateOf(getString(R.string.token_loading))
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             token =
                     if (task.isSuccessful) {
@@ -78,14 +79,18 @@ class MainActivity : ComponentActivity() {
                         task.result
                     } else {
                         Log.e("FCM", "token取得失敗", task.exception)
-                        "取得失敗: ${task.exception?.message}"
+                        getString(R.string.token_fetch_failed, task.exception?.message ?: "")
                     }
         }
-
         setContent {
             HourlyChimeTheme {
                 var selectedTab by remember { mutableIntStateOf(0) }
-                val tabs = listOf("Settings", "FCM Token")
+                val settingsTabTitle = stringResource(R.string.tab_settings)
+                val tokenTabTitle = stringResource(R.string.tab_fcm_token)
+                val tabs =
+                        remember(settingsTabTitle, tokenTabTitle) {
+                            listOf(settingsTabTitle, tokenTabTitle)
+                        }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
@@ -142,7 +147,7 @@ fun TokenScreen(token: String, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-                text = "FCM Registration Token",
+                text = stringResource(R.string.token_screen_title),
                 style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -158,8 +163,18 @@ fun TokenScreen(token: String, modifier: Modifier = Modifier) {
                     val clipboard =
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("FCM Token", token))
-                    Toast.makeText(context, "クリップボードにコピーしました", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                                    context,
+                                    context.getString(R.string.copy_clipboard_success),
+                                    Toast.LENGTH_SHORT,
+                            )
+                            .show()
                 }
-        ) { Icon(painterResource(R.drawable.ic_content_copy), contentDescription = "Copy") }
+        ) {
+            Icon(
+                    painterResource(R.drawable.ic_content_copy),
+                    contentDescription = stringResource(R.string.copy_content_description),
+            )
+        }
     }
 }

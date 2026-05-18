@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -55,7 +56,10 @@ fun TimeSignalScreen(
     val scope = rememberCoroutineScope()
 
     var settings by remember { mutableStateOf(TimeSignalPrefs.load(context)) }
-    var nextChimeText by remember { mutableStateOf("計算中...") }
+    val nextChimeCalculatingText = stringResource(R.string.next_chime_calculating)
+    var nextChimeText by remember(nextChimeCalculatingText) {
+        mutableStateOf(nextChimeCalculatingText)
+    }
     var hasExactAlarmPermission by remember { mutableStateOf(canScheduleExactAlarms(context)) }
     var hasBluetoothPermission by remember {
         mutableStateOf(BluetoothHelper.hasBluetoothConnectPermission(context))
@@ -102,7 +106,7 @@ fun TimeSignalScreen(
                         verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                            text = "正確なアラームの許可が必要です",
+                            text = stringResource(R.string.exact_alarm_permission_required),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.weight(1f),
                     )
@@ -111,7 +115,7 @@ fun TimeSignalScreen(
                                 onRequestExactAlarmPermission()
                                 hasExactAlarmPermission = canScheduleExactAlarms(context)
                             }
-                    ) { Text("設定へ") }
+                    ) { Text(stringResource(R.string.go_to_settings)) }
                 }
             }
         }
@@ -124,7 +128,7 @@ fun TimeSignalScreen(
                     verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
-                    Text("時報", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.hourly_chime), style = MaterialTheme.typography.titleMedium)
                     Text(
                             text = nextChimeText,
                             style = MaterialTheme.typography.bodySmall,
@@ -143,7 +147,7 @@ fun TimeSignalScreen(
             Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
-                Text("曜日", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.weekday), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 DayOfWeekSelector(
                         enabledDays = settings.enabledDays,
@@ -158,13 +162,18 @@ fun TimeSignalScreen(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
             ) {
                 Text(
-                        text = "%02d:00 〜 %02d:00".format(settings.startHour, settings.endHour),
+                        text =
+                                stringResource(
+                                        R.string.time_range_format,
+                                        "%02d:00".format(settings.startHour),
+                                        "%02d:00".format(settings.endHour),
+                                ),
                         style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                        "Start",
+                        stringResource(R.string.start_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -179,7 +188,7 @@ fun TimeSignalScreen(
                 )
 
                 Text(
-                        "Stop",
+                        stringResource(R.string.stop_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -203,9 +212,9 @@ fun TimeSignalScreen(
                     verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("祝日はスキップ", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.skip_holidays), style = MaterialTheme.typography.titleMedium)
                     Text(
-                            text = "国民の祝日には時報を鳴らさない",
+                            text = stringResource(R.string.skip_holidays_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -252,11 +261,11 @@ private fun BluetoothFilterCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                            "特定のBluetooth端末と接続時のみ",
+                            stringResource(R.string.bluetooth_only_when_connected),
                             style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                            text = "選択した端末が接続中のときのみ時報を鳴らす",
+                            text = stringResource(R.string.bluetooth_only_when_connected_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -282,22 +291,24 @@ private fun BluetoothFilterCard(
                             verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                                text = "Bluetooth権限が必要です",
+                                text = stringResource(R.string.bluetooth_permission_required),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = onRequestBluetoothPermission) { Text("許可する") }
+                        TextButton(onClick = onRequestBluetoothPermission) {
+                            Text(stringResource(R.string.allow_permission))
+                        }
                     }
                 } else if (bondedDevices.isEmpty()) {
                     Text(
-                            text = "ペアリング済みのBluetoothデバイスがありません",
+                            text = stringResource(R.string.no_paired_bluetooth_devices),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     Text(
-                            text = "対象デバイスを選択",
+                            text = stringResource(R.string.select_target_device),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -346,16 +357,33 @@ private fun DayOfWeekSelector(
         enabledDays: Set<Int>,
         onDaysChanged: (Set<Int>) -> Unit,
 ) {
+    val daySunday = stringResource(R.string.day_sunday)
+    val dayMonday = stringResource(R.string.day_monday)
+    val dayTuesday = stringResource(R.string.day_tuesday)
+    val dayWednesday = stringResource(R.string.day_wednesday)
+    val dayThursday = stringResource(R.string.day_thursday)
+    val dayFriday = stringResource(R.string.day_friday)
+    val daySaturday = stringResource(R.string.day_saturday)
     val days =
-            listOf(
-                    Calendar.SUNDAY to "日",
-                    Calendar.MONDAY to "月",
-                    Calendar.TUESDAY to "火",
-                    Calendar.WEDNESDAY to "水",
-                    Calendar.THURSDAY to "木",
-                    Calendar.FRIDAY to "金",
-                    Calendar.SATURDAY to "土",
-            )
+            remember(
+                    daySunday,
+                    dayMonday,
+                    dayTuesday,
+                    dayWednesday,
+                    dayThursday,
+                    dayFriday,
+                    daySaturday,
+            ) {
+                listOf(
+                        Calendar.SUNDAY to daySunday,
+                        Calendar.MONDAY to dayMonday,
+                        Calendar.TUESDAY to dayTuesday,
+                        Calendar.WEDNESDAY to dayWednesday,
+                        Calendar.THURSDAY to dayThursday,
+                        Calendar.FRIDAY to dayFriday,
+                        Calendar.SATURDAY to daySaturday,
+                )
+            }
     Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -384,9 +412,16 @@ private fun canScheduleExactAlarms(context: Context): Boolean {
 }
 
 private fun calcNextChimeText(context: Context, settings: TimeSignalSettings): String {
-    if (!settings.enabled) return "オフ"
+    if (!settings.enabled) return context.getString(R.string.next_chime_off)
     val nextMs =
-            TimeSignalScheduler.findNextChimeTime(context, settings) ?: return "設定なし（7日以内に該当なし）"
+            TimeSignalScheduler.findNextChimeTime(context, settings)
+                    ?: return context.getString(R.string.next_chime_not_found)
     val cal = Calendar.getInstance().apply { timeInMillis = nextMs }
-    return "Next: " + SimpleDateFormat("M/d (E) HH:00", Locale.JAPAN).format(cal.time)
+    val datetime =
+            SimpleDateFormat(
+                            context.getString(R.string.next_chime_datetime_format),
+                            Locale.JAPAN,
+                    )
+                    .format(cal.time)
+    return context.getString(R.string.next_chime_format, datetime)
 }

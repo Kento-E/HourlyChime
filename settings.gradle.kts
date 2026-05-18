@@ -67,7 +67,8 @@ dependencyResolutionManagement {
         val googleMavenMirrorUrls = (gradle.extra["googleMavenMirrorUrls"] as? List<*>)
             ?.map {
                 it as? String ?: throw GradleException(
-                    "Expected String in googleMavenMirrorUrls list, but found ${it?.javaClass?.name ?: "null"}."
+                    "Expected String in googleMavenMirrorUrls list (set via googleMavenMirrorUrls " +
+                        "or GOOGLE_MAVEN_MIRROR_URLS), but found ${it?.javaClass?.name ?: "null"}."
                 )
             }
             ?: throw GradleException(

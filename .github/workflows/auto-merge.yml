@@ -65,10 +65,10 @@ jobs:
 
           # pull_request_target (synchronize) の場合はApprove済みかを確認
           if [ "${EVENT_NAME}" = "pull_request_target" ]; then
-            APPROVED=$(gh pr view ${PR_NUMBER} --repo ${{ github.repository }} \
-              --json reviews \
-              --jq '[.reviews[] | select(.state=="APPROVED")] | length')
-            if [ "${APPROVED}" = "0" ]; then
+            REVIEW_DECISION=$(gh pr view ${PR_NUMBER} --repo ${{ github.repository }} \
+              --json reviewDecision \
+              --jq '.reviewDecision')
+            if [ "${REVIEW_DECISION}" != "APPROVED" ]; then
               echo "ℹ️ PR #${PR_NUMBER} はまだApproveされていません。スキップします。"
               exit 0
             fi

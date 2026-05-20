@@ -38,6 +38,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_REVIEW_STATE: ${{ github.event.review.state || '' }}
         run: |
           echo "PR #${PR_NUMBER} の自動マージを開始します... (trigger: ${EVENT_NAME})"
 
@@ -55,8 +56,29 @@ jobs:
             --json reviewDecision \
             --jq '.reviewDecision')
           if [ "${REVIEW_DECISION}" != "APPROVED" ]; then
-            echo "ℹ️ PR #${PR_NUMBER} はまだApproveされていません。スキップします。"
-            exit 0
+            if [ "${EVENT_NAME}" = "pull_request_review" ] && [ "${EVENT_REVIEW_STATE}" = "approved" ]; then
+              echo "ℹ️ reviewDecision が未反映の可能性があるため、最新レビュー状態を確認します。"
+              REVIEW_SUMMARY=$(gh pr view ${PR_NUMBER} --repo ${{ github.repository }} \
+                --json reviews \
+                --jq '
+                  .reviews
+                  | sort_by(.submittedAt)
+                  | group_by(.author.login)
+                  | map(last)
+                  | {
+                      hasApproved: any(.state == "APPROVED"),
+                      hasChangesRequested: any(.state == "CHANGES_REQUESTED")
+                    }')
+              HAS_APPROVED=$(echo "${REVIEW_SUMMARY}" | jq -r '.hasApproved')
+              HAS_CHANGES_REQUESTED=$(echo "${REVIEW_SUMMARY}" | jq -r '.hasChangesRequested')
+              if [ "${HAS_APPROVED}" != "true" ] || [ "${HAS_CHANGES_REQUESTED}" = "true" ]; then
+                echo "ℹ️ PR #${PR_NUMBER} は承認要件を満たしていません。スキップします。"
+                exit 0
+              fi
+            else
+              echo "ℹ️ PR #${PR_NUMBER} はまだApproveされていません。スキップします。"
+              exit 0
+            fi
           fi
 
           # PRのマージ可能状態を確認

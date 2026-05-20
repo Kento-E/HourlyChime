@@ -62,9 +62,8 @@ jobs:
                 --json reviews \
                 --jq '
                   .reviews
-                  | sort_by(.submittedAt)
                   | group_by(.author.login)
-                  | map(last)
+                  | map(max_by(.submittedAt))
                   | {
                       hasApproved: any(.state == "APPROVED"),
                       hasChangesRequested: any(.state == "CHANGES_REQUESTED")

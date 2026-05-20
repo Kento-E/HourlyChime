@@ -53,7 +53,7 @@ jobs:
               shift
               if [ "$#" -eq 0 ]; then
                 echo "usage: rtk proxy <command> [<args>...]" >&2
-                exit 1
+                exit 2
               fi
               exec "$@"
               ;;

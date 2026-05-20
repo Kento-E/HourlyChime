@@ -6,6 +6,11 @@ on:
       - closed
     branches:
       - main
+  workflow_run:
+    workflows:
+      - Auto Merge on Approval
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -13,7 +18,12 @@ permissions:
 
 jobs:
   distribute:
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.merged == true }}
+    if: >-
+      ${{
+        (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+        github.event_name == 'workflow_dispatch'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
 

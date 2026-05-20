@@ -49,7 +49,7 @@ object NotificationHelper {
     fun postTimeSignal(context: Context, hour: Int) {
         vibrateFixedPattern(context)
 
-        val text = "%02d:00 の時報".format(hour)
+        val text = buildTimeSignalText(hour)
         val largeIcon = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
@@ -65,6 +65,8 @@ object NotificationHelper {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(NOTIFICATION_ID, notification)
     }
+
+    internal fun buildTimeSignalText(hour: Int): String = "%02d:00".format(hour)
 
     private fun vibrateFixedPattern(context: Context) {
         val vibrator =

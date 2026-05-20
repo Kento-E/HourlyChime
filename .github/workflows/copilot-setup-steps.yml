@@ -46,7 +46,13 @@ jobs:
           case "$1" in
             gain) echo "(rtk gain: stub)" ;;
             proxy) shift; exec "$@" ;;
-            *) exec "$@" ;;
+            *)
+              if [ "$1" = "gradlew" ] && [ -x "./gradlew" ]; then
+                shift
+                exec ./gradlew "$@"
+              fi
+              exec "$@"
+              ;;
           esac
           SCRIPT
           chmod +x "$HOME/.local/bin/rtk"

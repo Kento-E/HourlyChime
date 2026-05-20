@@ -36,25 +36,32 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Auto Merge on Approval は単一PR起点のため先頭PRを判定対象にする
           PR_NUMBER=$(jq -r '.workflow_run.pull_requests[0].number // empty' "$GITHUB_EVENT_PATH")
           if [ -z "$PR_NUMBER" ]; then
-            echo "ℹ️ workflow_run に関連するPRが見つからないため配布をスキップします。"
+            echo "ℹ️ workflow_run に関連するPRが見つからないため配信をスキップします。"
             echo "should_run=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          IS_MERGED=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json merged --jq '.merged')
-          if [ "$IS_MERGED" = "true" ]; then
-            echo "✅ PR #$PR_NUMBER はマージ済みのため配布を継続します。"
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ℹ️ PR #$PR_NUMBER は未マージのため配布をスキップします。"
+          set +e
+          IS_MERGED=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json merged --jq '.merged' 2>&1)
+          GH_EXIT_CODE=$?
+          set -e
+          if [ "$GH_EXIT_CODE" -ne 0 ]; then
+            echo "⚠️ PR #$PR_NUMBER の状態取得に失敗したため配信をスキップします。"
+            echo "$IS_MERGED"
             echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      - name: Skip distribute when workflow_run PR is not merged
-        if: ${{ github.event_name == 'workflow_run' && steps.guard_workflow_run.outputs.should_run != 'true' }}
-        run: echo "Distribute job is skipped for this workflow_run event."
+          if [ "$IS_MERGED" = "true" ]; then
+            echo "✅ PR #$PR_NUMBER はマージ済みのため配信を継続します。"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ℹ️ PR #$PR_NUMBER は未マージのため配信をスキップします。"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout
         if: ${{ github.event_name != 'workflow_run' || steps.guard_workflow_run.outputs.should_run == 'true' }}

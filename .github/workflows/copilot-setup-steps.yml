@@ -37,6 +37,61 @@ jobs:
             "platforms;android-36" \
             "build-tools;36.0.0"
 
+      - name: Create stub rtk command
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cat > "$HOME/.local/bin/rtk" <<'SCRIPT'
+          #!/usr/bin/env bash
+          # rtk stub: passes commands through; handles gain/proxy subcommands
+          case "$1" in
+            gain) echo "(rtk gain: stub)" ;;
+            proxy) shift; exec "$@" ;;
+            *)
+              if [ "$1" = "gradlew" ] && [ -x "./gradlew" ]; then
+                shift
+                exec ./gradlew "$@"
+              fi
+              exec "$@"
+              ;;
+          esac
+          SCRIPT
+          chmod +x "$HOME/.local/bin/rtk"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Create dummy google-services.json for development
+        run: |
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "1052281628451",
+              "project_id": "hourlychime",
+              "storage_bucket": "hourlychime.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:1052281628451:android:3d20d418e11e45e48f0e96",
+                  "android_client_info": {
+                    "package_name": "com.example.hourlychime"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "PLACEHOLDER"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:

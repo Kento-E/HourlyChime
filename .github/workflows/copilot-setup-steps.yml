@@ -43,9 +43,20 @@ jobs:
           cat > "$HOME/.local/bin/rtk" <<'SCRIPT'
           #!/usr/bin/env bash
           # rtk stub: passes commands through; handles gain/proxy subcommands
+          if [ "$#" -eq 0 ]; then
+            echo "usage: rtk <command>|gain|proxy <command> [args...]" >&2
+            exit 2
+          fi
           case "$1" in
             gain) echo "(rtk gain: stub)" ;;
-            proxy) shift; exec "$@" ;;
+            proxy)
+              shift
+              if [ "$#" -eq 0 ]; then
+                echo "usage: rtk proxy <command> [args...]" >&2
+                exit 2
+              fi
+              exec "$@"
+              ;;
             *)
               if [ "$1" = "gradlew" ] && [ -x "./gradlew" ]; then
                 shift

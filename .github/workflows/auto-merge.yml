@@ -14,8 +14,11 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
     if: >
-      github.event_name == 'pull_request_target' ||
-      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        github.event_name == 'pull_request_target' ||
+        (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+      )
 
     steps:
       - name: PR情報を表示
@@ -47,15 +50,13 @@ jobs:
             exit 0
           fi
 
-          # pull_request_target (synchronize) の場合はApprove済みかを確認
-          if [ "${EVENT_NAME}" = "pull_request_target" ]; then
-            REVIEW_DECISION=$(gh pr view ${PR_NUMBER} --repo ${{ github.repository }} \
-              --json reviewDecision \
-              --jq '.reviewDecision')
-            if [ "${REVIEW_DECISION}" != "APPROVED" ]; then
-              echo "ℹ️ PR #${PR_NUMBER} はまだApproveされていません。スキップします。"
-              exit 0
-            fi
+          # イベント種別に関わらずPR全体の承認状態を確認
+          REVIEW_DECISION=$(gh pr view ${PR_NUMBER} --repo ${{ github.repository }} \
+            --json reviewDecision \
+            --jq '.reviewDecision')
+          if [ "${REVIEW_DECISION}" != "APPROVED" ]; then
+            echo "ℹ️ PR #${PR_NUMBER} はまだApproveされていません。スキップします。"
+            exit 0
           fi
 
           # PRのマージ可能状態を確認

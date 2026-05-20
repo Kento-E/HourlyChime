@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'pull_request_target' ||
-      github.event.review.state == 'approved'
+      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
 
     steps:
       - name: PR情報を表示
@@ -23,7 +23,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BASE: ${{ github.event.pull_request.base.ref }}
           PR_HEAD: ${{ github.event.pull_request.head.ref }}
-          REVIEWER: ${{ github.event.review.user.login || github.actor }}
+          REVIEWER: ${{ github.actor }}
         run: |
           echo "PR #${{ github.event.pull_request.number }}: ${PR_TITLE}"
           echo "Base: ${PR_BASE}"

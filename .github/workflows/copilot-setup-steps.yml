@@ -44,7 +44,7 @@ jobs:
           #!/usr/bin/env bash
           # rtk stub: passes commands through; handles gain/proxy subcommands
           if [ "$#" -eq 0 ]; then
-            echo "usage: rtk <command>|gain|proxy <command> [args...]" >&2
+            echo "usage: rtk {gain|proxy <command>|<command>} [args...]" >&2
             exit 2
           fi
           case "$1" in
@@ -52,7 +52,7 @@ jobs:
             proxy)
               shift
               if [ "$#" -eq 0 ]; then
-                echo "usage: rtk proxy <command> [args...]" >&2
+                echo "usage: rtk proxy <command> [<args>...]" >&2
                 exit 2
               fi
               exec "$@"

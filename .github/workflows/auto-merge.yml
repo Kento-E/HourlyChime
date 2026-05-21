@@ -3,8 +3,6 @@ name: Auto Merge on Approval
 on:
   pull_request_review:
     types: [submitted]
-  pull_request_target:
-    types: [synchronize, ready_for_review]
 
 permissions:
   contents: write
@@ -15,10 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event.pull_request.head.repo.full_name == github.repository &&
-      (
-        github.event_name == 'pull_request_target' ||
-        (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
-      )
+      github.event.review.state == 'approved'
 
     steps:
       - name: PR情報を表示

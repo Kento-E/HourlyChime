@@ -84,7 +84,7 @@ JAVA_TOOL_OPTIONS="-Djava.net.preferIPv4Stack=true -Dhttps.protocols=TLSv1.2,TLS
 
 ### GitHub Actions で自動配布
 
-`main` への push または手動実行（`workflow_dispatch`）で、
+PR のマージ（`pull_request: closed` / Auto Merge完了）または手動実行（`workflow_dispatch`）で、
 ユニットテスト実行後に Firebase App Distribution へ自動配布します。
 
 ワークフロー定義: `.github/workflows/android-distribute.yml`
